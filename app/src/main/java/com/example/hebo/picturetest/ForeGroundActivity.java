@@ -1,5 +1,6 @@
 package com.example.hebo.picturetest;
 
+
 import android.content.ContentUris;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -30,8 +31,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
-
-public class BackGroundActivity extends AppCompatActivity{
+public class ForeGroundActivity extends AppCompatActivity {
     private SearchView mSearchView;
     PopupMenu popupMenu;
     Menu menu;
@@ -43,10 +43,11 @@ public class BackGroundActivity extends AppCompatActivity{
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_back_ground);
-        picture=(ImageView)findViewById(R.id.picture);
-        mSearchView = (SearchView) findViewById(R.id.searchView);
+        setContentView(R.layout.activity_fore_ground);
+        picture=(ImageView)findViewById(R.id.picture1);
+        mSearchView = (SearchView) findViewById(R.id.searchView1);
         mSearchView.onActionViewExpanded();// 写上此句后searchView初始是可以点击输入的状态
+
         // 设置搜索文本监听
         mSearchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             // 当点击搜索按钮时触发该方法
@@ -59,16 +60,16 @@ public class BackGroundActivity extends AppCompatActivity{
             public boolean onQueryTextChange(String newText) {
                 if (!TextUtils.isEmpty(newText)){
                     //mListView.setFilterText(newText);
-                    Toast.makeText(BackGroundActivity.this,"搜索成功",Toast.LENGTH_SHORT).show();
+                    Toast.makeText(ForeGroundActivity.this,"搜索成功",Toast.LENGTH_SHORT).show();
                 }else{
                     //mListView.clearTextFilter();
-                    Toast.makeText(BackGroundActivity.this,"搜索内容为空",Toast.LENGTH_SHORT).show();
+                    Toast.makeText(ForeGroundActivity.this,"搜索内容为空",Toast.LENGTH_SHORT).show();
                 }
                 return false;
             }
         });
 
-        popupMenu = new PopupMenu(this, findViewById(R.id.popupmenu_btn));
+        popupMenu = new PopupMenu(this, findViewById(R.id.popupmenu_btn1));
         menu = popupMenu.getMenu();
         // 通过XML文件添加菜单项
         MenuInflater menuInflater = getMenuInflater();
@@ -80,8 +81,8 @@ public class BackGroundActivity extends AppCompatActivity{
             public boolean onMenuItemClick(MenuItem item) {
                 switch (item.getItemId()) {
                     case R.id.choose_from_album:
-                        if (ContextCompat.checkSelfPermission(BackGroundActivity.this, android.Manifest.permission.WRITE_EXTERNAL_STORAGE)!= PackageManager.PERMISSION_GRANTED){
-                            ActivityCompat.requestPermissions(BackGroundActivity.this,new String[]{android.Manifest.permission.WRITE_EXTERNAL_STORAGE},1);
+                        if (ContextCompat.checkSelfPermission(ForeGroundActivity.this, android.Manifest.permission.WRITE_EXTERNAL_STORAGE)!= PackageManager.PERMISSION_GRANTED){
+                            ActivityCompat.requestPermissions(ForeGroundActivity.this,new String[]{android.Manifest.permission.WRITE_EXTERNAL_STORAGE},1);
                         }else {
                             openAlbum();
                         }
@@ -98,7 +99,7 @@ public class BackGroundActivity extends AppCompatActivity{
                             e.printStackTrace();
                         }
                         if (Build.VERSION.SDK_INT>=24){//安卓版本不低于7.0
-                            imageUri= FileProvider.getUriForFile(BackGroundActivity.this,"com.example.hebo.picturetest.fileprovider",outputImage);
+                            imageUri= FileProvider.getUriForFile(ForeGroundActivity.this,"com.example.hebo.picturetest.fileprovider",outputImage);
                         }else {
                             imageUri=Uri.fromFile(outputImage);
                         }
