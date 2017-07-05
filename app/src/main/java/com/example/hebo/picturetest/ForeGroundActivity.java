@@ -127,9 +127,9 @@ public class ForeGroundActivity extends AppCompatActivity {
     //打开图库
     private void openAlbum(){
         Intent intent=new Intent("android.intent.action.GET_CONTENT");
-        //intent.setType("image/*");
+        intent.setType("image/*");
         //Intent intent = new Intent(Intent.ACTION_PICK, null);
-        intent.setDataAndType(MediaStore.Images.Media.EXTERNAL_CONTENT_URI,"image");
+        //intent.setDataAndType(MediaStore.Images.Media.EXTERNAL_CONTENT_URI,"image");
         startActivityForResult(intent,CHOOSE_PHOTO);
     }
 
@@ -153,8 +153,8 @@ public class ForeGroundActivity extends AppCompatActivity {
         switch (requestCode){
             case CHOOSE_PHOTO://对图库中选择的图片进行处理
                 if (resultCode==RESULT_OK){
-                    //handleImageOnKitkat(data);
-                    startPhotoZoom(data.getData());
+                    handleImageOnKitkat(data);
+                    //startPhotoZoom(data.getData());
                 }
                 break;
             case TAKE_PHOTO://将拍摄的照片显示出来
@@ -199,8 +199,8 @@ public class ForeGroundActivity extends AppCompatActivity {
             //如果是file类型的Uri，直接获取图片路径即可
             imagePath=uri.getPath();
         }
-        startPhotoZoom(uri);
-        displayImage(imagePath);//根据图片路径显示图片
+        cropPic(imagePath);
+        //displayImage(imagePath);//根据图片路径显示图片
     }
 
     private String getImagePath(Uri uri,String selection){
@@ -232,12 +232,13 @@ public class ForeGroundActivity extends AppCompatActivity {
         //下面这个crop=true是设置在开启的Intent中设置显示的VIEW可裁剪
         intent.putExtra("crop", "true");
         // aspectX aspectY 是宽高的比例
-        intent.putExtra("aspectX", 1);
-        intent.putExtra("aspectY", 1);
+        intent.putExtra("aspectX", 0.1);
+        intent.putExtra("aspectY", 0.1);
         // outputX outputY 是裁剪图片宽高
         intent.putExtra("outputX", 150);
         intent.putExtra("outputY", 150);
         intent.putExtra("return-data", true);
+        intent.putExtra("scale", true);
         startActivityForResult(intent, 3);
     }
 
@@ -249,5 +250,26 @@ public class ForeGroundActivity extends AppCompatActivity {
             picture.setImageBitmap(photo);
         }
     }
+
+    private void cropPic(String imagePath) {
+        File file = new File(imagePath);
+        Intent intent = new Intent("com.android.camera.action.CROP");
+        /*if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            Uri contentUri = FileProvider.getUriForFile(this, "com.leon.crop.fileprovider", file);
+            intent.setDataAndType(contentUri, "image*//*");
+        } else {
+        }*/
+        intent.setDataAndType(Uri.fromFile(file), "image/*");
+        intent.putExtra("crop", "true");
+        intent.putExtra("aspectX", 0.1);//若均为1则无法任意改变矩阵长宽比
+        intent.putExtra("aspectY", 0.1);
+        intent.putExtra("outputX", 150);
+        intent.putExtra("outputY", 150);
+        intent.putExtra("return-data", true);
+        intent.putExtra("scale", true);
+        startActivityForResult(intent, 3);
+    }
+
 
 }
