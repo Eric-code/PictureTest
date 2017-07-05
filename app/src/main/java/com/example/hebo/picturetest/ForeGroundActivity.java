@@ -7,6 +7,8 @@ import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Message;
@@ -37,6 +39,7 @@ public class ForeGroundActivity extends AppCompatActivity {
     Menu menu;
     public static final int TAKE_PHOTO=1;//照相
     public static final int CHOOSE_PHOTO=2;//图库中选择照片
+    public static final int EMPTY_ESTIMATE=3;//图片非空判断，防止重新剪裁时报错
     private ImageView picture;
     public static Uri imageUri;
 
@@ -124,7 +127,9 @@ public class ForeGroundActivity extends AppCompatActivity {
     //打开图库
     private void openAlbum(){
         Intent intent=new Intent("android.intent.action.GET_CONTENT");
-        intent.setType("image/*");
+        //intent.setType("image/*");
+        //Intent intent = new Intent(Intent.ACTION_PICK, null);
+        intent.setDataAndType(MediaStore.Images.Media.EXTERNAL_CONTENT_URI,"image");
         startActivityForResult(intent,CHOOSE_PHOTO);
     }
 
@@ -148,17 +153,24 @@ public class ForeGroundActivity extends AppCompatActivity {
         switch (requestCode){
             case CHOOSE_PHOTO://对图库中选择的图片进行处理
                 if (resultCode==RESULT_OK){
-                    handleImageOnKitkat(data);
+                    //handleImageOnKitkat(data);
+                    startPhotoZoom(data.getData());
                 }
                 break;
             case TAKE_PHOTO://将拍摄的照片显示出来
                 if (resultCode==RESULT_OK){
-                    try {
+                    startPhotoZoom(imageUri);
+                    /*try {
                         Bitmap bitmap= BitmapFactory.decodeStream(getContentResolver().openInputStream(imageUri));
                         picture.setImageBitmap(bitmap);
                     }catch (FileNotFoundException e){
                         e.printStackTrace();
-                    }
+                    }*/
+                }
+                break;
+            case EMPTY_ESTIMATE://非空判断，防止重新剪裁时报错
+                if (data!=null){
+                    setPicToView(data);
                 }
                 break;
             default:
@@ -187,6 +199,7 @@ public class ForeGroundActivity extends AppCompatActivity {
             //如果是file类型的Uri，直接获取图片路径即可
             imagePath=uri.getPath();
         }
+        startPhotoZoom(uri);
         displayImage(imagePath);//根据图片路径显示图片
     }
 
@@ -211,4 +224,30 @@ public class ForeGroundActivity extends AppCompatActivity {
             Toast.makeText(this,"获取图片失败",Toast.LENGTH_SHORT).show();
         }
     }
+
+    //剪裁图片方法实现
+    public void startPhotoZoom(Uri uri) {
+        Intent intent = new Intent("com.android.camera.action.CROP");
+        intent.setDataAndType(uri, "image/*");
+        //下面这个crop=true是设置在开启的Intent中设置显示的VIEW可裁剪
+        intent.putExtra("crop", "true");
+        // aspectX aspectY 是宽高的比例
+        intent.putExtra("aspectX", 1);
+        intent.putExtra("aspectY", 1);
+        // outputX outputY 是裁剪图片宽高
+        intent.putExtra("outputX", 150);
+        intent.putExtra("outputY", 150);
+        intent.putExtra("return-data", true);
+        startActivityForResult(intent, 3);
+    }
+
+    //保存剪裁之后的图片数据
+    private void setPicToView(Intent picdata) {
+        Bundle extras = picdata.getExtras();
+        if (extras != null) {
+            Bitmap photo = extras.getParcelable("data");
+            picture.setImageBitmap(photo);
+        }
+    }
+
 }
