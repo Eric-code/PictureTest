@@ -1,7 +1,11 @@
 package com.example.hebo.picturetest;
 
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
+import android.os.Handler;
+import android.os.Message;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
@@ -18,19 +22,25 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import java.io.FileNotFoundException;
 import java.net.URL;
 import java.net.URLEncoder;
 
 public class MainActivity extends AppCompatActivity {
-    private static final String TAG = "ChooseAreaFragment";
+    private static final String TAG = "MainActivity";
+    public static final int TAKE_PHOTO_MSG=0x123;
+    public static final int CHOOSE_PHOTO_MSG=0x234;
     private DrawerLayout mdrawerLayout;//滑动菜单
     public ImageView back_picture;
     int fore_picture_num=0;
     public Uri imageUri;
+    public String imagePath=null;
+    public static Handler revHandler;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
         back_picture=(ImageView)findViewById(R.id.back_picture);
         Toolbar toolbar=(Toolbar)findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);//添加toolBar
@@ -92,6 +102,34 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
+
+        revHandler=new Handler(){
+            public void handleMessage(Message msg){
+                switch (msg.what){
+                    case TAKE_PHOTO_MSG:
+                        imagePath=BackGroundActivity.imagePath;
+                        Bitmap bitmap=BitmapFactory.decodeFile(imagePath);
+                        back_picture.setImageBitmap(bitmap);
+                        Log.e(TAG,"消息收到+"+imageUri);
+                        /*try {
+                            //imageUri=BackGroundActivity.imageUri;
+                            //Bitmap bitmap= BitmapFactory.decodeStream(getContentResolver().openInputStream(imageUri));
+                        }catch (FileNotFoundException e){
+                            e.printStackTrace();
+                        }*/
+                        break;
+                    case CHOOSE_PHOTO_MSG:
+                        imagePath=BackGroundActivity.imagePath;
+                        Bitmap bitmap1=BitmapFactory.decodeFile(imagePath);
+                        back_picture.setImageBitmap(bitmap1);
+                        Log.e(TAG,"消息收到+"+imageUri);
+                        break;
+                    default:
+                        break;
+                }
+            }
+        };
+
     }
 
     //toolbar菜单命令
@@ -116,5 +154,6 @@ public class MainActivity extends AppCompatActivity {
         }
         return true;
     }
+
 
 }

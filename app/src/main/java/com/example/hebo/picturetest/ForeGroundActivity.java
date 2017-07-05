@@ -11,6 +11,7 @@ import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Handler;
 import android.os.Message;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
@@ -42,15 +43,17 @@ public class ForeGroundActivity extends AppCompatActivity {
     public static final int EMPTY_ESTIMATE=3;//图片非空判断，防止重新剪裁时报错
     private ImageView picture;
     public static Uri imageUri;
+    private Handler handler;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_fore_ground);
         picture=(ImageView)findViewById(R.id.picture1);
+        handler=new Handler();
+
         mSearchView = (SearchView) findViewById(R.id.searchView1);
         mSearchView.onActionViewExpanded();// 写上此句后searchView初始是可以点击输入的状态
-
         // 设置搜索文本监听
         mSearchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             // 当点击搜索按钮时触发该方法
@@ -178,6 +181,7 @@ public class ForeGroundActivity extends AppCompatActivity {
         }
     }
 
+    //处理从图库中选择的图片
     private void handleImageOnKitkat(Intent data){
         String imagePath=null;
         Uri uri=data.getData();
@@ -202,7 +206,7 @@ public class ForeGroundActivity extends AppCompatActivity {
         cropPic(imagePath);
         //displayImage(imagePath);//根据图片路径显示图片
     }
-
+    //获取图库中图片的路径
     private String getImagePath(Uri uri,String selection){
         String path=null;
         //通过Uri和selection来获取真实的图片路径
@@ -242,12 +246,13 @@ public class ForeGroundActivity extends AppCompatActivity {
         startActivityForResult(intent, 3);
     }
 
-    //保存剪裁之后的图片数据
+    //保存剪裁之后的图片数据并将图片绘制出来
     private void setPicToView(Intent picdata) {
         Bundle extras = picdata.getExtras();
         if (extras != null) {
             Bitmap photo = extras.getParcelable("data");
             picture.setImageBitmap(photo);
+
         }
     }
 
@@ -270,6 +275,4 @@ public class ForeGroundActivity extends AppCompatActivity {
         intent.putExtra("scale", true);
         startActivityForResult(intent, 3);
     }
-
-
 }

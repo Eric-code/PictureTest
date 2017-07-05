@@ -7,7 +7,9 @@ import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
+import android.nfc.Tag;
 import android.os.Build;
+import android.os.Handler;
 import android.os.Message;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
@@ -19,6 +21,7 @@ import android.os.Bundle;
 import android.support.v7.widget.PopupMenu;
 import android.support.v7.widget.SearchView;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -35,16 +38,24 @@ public class BackGroundActivity extends AppCompatActivity{
     private SearchView mSearchView;
     PopupMenu popupMenu;
     Menu menu;
+    private static final String TAG = "BackGroundActivity";
     public static final int TAKE_PHOTO=1;//照相
     public static final int CHOOSE_PHOTO=2;//图库中选择照片
+    public static final int TAKE_PHOTO_MSG=0x123;
+    public static final int CHOOSE_PHOTO_MSG=0x234;
     private ImageView picture;
     public static Uri imageUri;
+    public static String imagePath=null;
+    private String[] mStrs = {"aaa", "bbb", "ccc", "airsaid"};
+    private Handler handler;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_back_ground);
         picture=(ImageView)findViewById(R.id.picture);
+        handler=new Handler();
+
         mSearchView = (SearchView) findViewById(R.id.searchView);
         mSearchView.onActionViewExpanded();// 写上此句后searchView初始是可以点击输入的状态
         // 设置搜索文本监听
@@ -148,16 +159,40 @@ public class BackGroundActivity extends AppCompatActivity{
             case CHOOSE_PHOTO://对图库中选择的图片进行处理
                 if (resultCode==RESULT_OK){
                     handleImageOnKitkat(data);
+                    new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Message message=new Message();
+                            message.what=CHOOSE_PHOTO_MSG;
+                            handler=MainActivity.revHandler;
+                            handler.sendMessage(message);
+                        }
+                    }).start();
+                    finish();
                 }
                 break;
             case TAKE_PHOTO://将拍摄的照片显示出来
                 if (resultCode==RESULT_OK){
+                    imagePath=imageUri.getPath();
+                    //不知道下面这个try...catch...起到了什么作用，但是一删掉主界面就无法显示拍摄的照片
                     try {
                         Bitmap bitmap= BitmapFactory.decodeStream(getContentResolver().openInputStream(imageUri));
-                        picture.setImageBitmap(bitmap);
+                        //picture.setImageBitmap(bitmap);
                     }catch (FileNotFoundException e){
                         e.printStackTrace();
                     }
+                    new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Message message=new Message();
+                            message.what=TAKE_PHOTO_MSG;
+                            handler=MainActivity.revHandler;
+                            handler.sendMessage(message);
+                        }
+                    }).start();
+                    Log.e(TAG,"已经传送+"+imageUri);
+                    finish();
+
                 }
                 break;
             default:
@@ -166,7 +201,6 @@ public class BackGroundActivity extends AppCompatActivity{
     }
 
     private void handleImageOnKitkat(Intent data){
-        String imagePath=null;
         Uri uri=data.getData();
         if (DocumentsContract.isDocumentUri(this,uri)){
             //如果是document类型的Uri，则通过document id 处理
@@ -186,7 +220,7 @@ public class BackGroundActivity extends AppCompatActivity{
             //如果是file类型的Uri，直接获取图片路径即可
             imagePath=uri.getPath();
         }
-        displayImage(imagePath);//根据图片路径显示图片
+        //displayImage(imagePath);//根据图片路径显示图片
     }
 
     private String getImagePath(Uri uri,String selection){
