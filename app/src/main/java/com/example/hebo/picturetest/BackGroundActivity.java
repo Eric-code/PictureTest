@@ -26,12 +26,16 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.ImageView;
+import android.widget.ListView;
 import android.widget.Toast;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Objects;
 
 
 public class BackGroundActivity extends AppCompatActivity{
@@ -43,18 +47,25 @@ public class BackGroundActivity extends AppCompatActivity{
     public static final int CHOOSE_PHOTO=2;//图库中选择照片
     public static final int TAKE_PHOTO_MSG=0x123;
     public static final int CHOOSE_PHOTO_MSG=0x234;
-    private ImageView picture;
+    //private ImageView picture;
     public static Uri imageUri;
     public static String imagePath=null;
     private String[] mStrs = {"aaa", "bbb", "ccc", "airsaid"};
     private Handler handler;
+    private ListView mListView;
+    ArrayAdapter<String>adapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_back_ground);
-        picture=(ImageView)findViewById(R.id.picture);
+        //picture=(ImageView)findViewById(R.id.picture);
         handler=new Handler();
+        //搜索框下部检索提示信息显示
+        mListView=(ListView)findViewById(R.id.listView);
+        adapter=new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, mStrs);
+        mListView.setAdapter(adapter);
+        mListView.setTextFilterEnabled(true);//过滤数据属性
 
         mSearchView = (SearchView) findViewById(R.id.searchView);
         mSearchView.onActionViewExpanded();// 写上此句后searchView初始是可以点击输入的状态
@@ -68,12 +79,17 @@ public class BackGroundActivity extends AppCompatActivity{
             // 当搜索内容改变时触发该方法
             @Override
             public boolean onQueryTextChange(String newText) {
+                /*Object[] obj = searchItem(newText);
+                updateLayout(obj);
+                return true;*/
                 if (!TextUtils.isEmpty(newText)){
+                    adapter.getFilter().filter(newText.toString());
                     //mListView.setFilterText(newText);
-                    Toast.makeText(BackGroundActivity.this,"搜索成功",Toast.LENGTH_SHORT).show();
+                    //Toast.makeText(BackGroundActivity.this,"搜索成功",Toast.LENGTH_SHORT).show();
                 }else{
-                    //mListView.clearTextFilter();
-                    Toast.makeText(BackGroundActivity.this,"搜索内容为空",Toast.LENGTH_SHORT).show();
+                    adapter.getFilter().filter("");
+                    mListView.clearTextFilter();
+                    //Toast.makeText(BackGroundActivity.this,"搜索内容为空",Toast.LENGTH_SHORT).show();
                 }
                 return false;
             }
@@ -126,6 +142,7 @@ public class BackGroundActivity extends AppCompatActivity{
         });
 
     }
+
     //显示弹出式菜单
     public void popupmenu(View v) {
         popupMenu.show();
@@ -168,12 +185,12 @@ public class BackGroundActivity extends AppCompatActivity{
                             handler.sendMessage(message);
                         }
                     }).start();
-                    finish();
+                    finish();//结束本活动，就直接显示主界面
                 }
                 break;
             case TAKE_PHOTO://将拍摄的照片显示出来
                 if (resultCode==RESULT_OK){
-                    imagePath=imageUri.getPath();
+                    imagePath=imageUri.getPath();//将图片信息的uri转换成路径
                     //不知道下面这个try...catch...起到了什么作用，但是一删掉主界面就无法显示拍摄的照片
                     try {
                         Bitmap bitmap= BitmapFactory.decodeStream(getContentResolver().openInputStream(imageUri));
@@ -191,8 +208,7 @@ public class BackGroundActivity extends AppCompatActivity{
                         }
                     }).start();
                     Log.e(TAG,"已经传送+"+imageUri);
-                    finish();
-
+                    finish();//结束本活动，就直接显示主界面
                 }
                 break;
             default:
@@ -239,7 +255,7 @@ public class BackGroundActivity extends AppCompatActivity{
     private void displayImage(String imagePath){
         if (imagePath!=null){
             Bitmap bitmap=BitmapFactory.decodeFile(imagePath);
-            picture.setImageBitmap(bitmap);
+            //picture.setImageBitmap(bitmap);
         }else {
             Toast.makeText(this,"获取图片失败",Toast.LENGTH_SHORT).show();
         }
