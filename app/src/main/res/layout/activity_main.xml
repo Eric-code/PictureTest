@@ -22,12 +22,23 @@
                 android:background="?attr/colorPrimary"
                 android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
                 android:popupTheme="@style/ThemeOverlay.AppCompat.Light"/>
-            <ImageView
-                android:id="@+id/back_picture"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_horizontal"
-                android:src="@drawable/nav_icon"/>
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+                <ImageView
+                    android:id="@+id/back_picture"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_alignParentTop="true"
+                    android:src="@drawable/nav_icon"/>
+                <ImageView
+                    android:id="@+id/fore_picture"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/ic_launcher"/>
+            </RelativeLayout>
+
         </LinearLayout>
 
     </FrameLayout>

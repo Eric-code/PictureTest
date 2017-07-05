@@ -3,6 +3,7 @@ package com.example.hebo.picturetest;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
 import android.net.Uri;
 import android.os.Handler;
 import android.os.Message;
@@ -17,6 +18,7 @@ import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -26,22 +28,32 @@ import java.io.FileNotFoundException;
 import java.net.URL;
 import java.net.URLEncoder;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements View.OnTouchListener {
     private static final String TAG = "MainActivity";
     public static final int TAKE_PHOTO_MSG=0x123;
     public static final int CHOOSE_PHOTO_MSG=0x234;
+    public static final int CROP_PHOTO_MSG=0x345;
     private DrawerLayout mdrawerLayout;//滑动菜单
-    public ImageView back_picture;
+    public ImageView back_picture,fore_picture;
     int fore_picture_num=0;
     public Uri imageUri;
     public String imagePath=null;
     public static Handler revHandler;
+    Canvas canvas;
+    int lastX, lastY;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
         back_picture=(ImageView)findViewById(R.id.back_picture);
+        back_picture.setDrawingCacheEnabled(true);//启动缓存
+        fore_picture=(ImageView)findViewById(R.id.fore_picture);
+        fore_picture.setDrawingCacheEnabled(true);
+        fore_picture.setOnTouchListener(this);
+
         Toolbar toolbar=(Toolbar)findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);//添加toolBar
         mdrawerLayout=(DrawerLayout)findViewById(R.id.drawer_layout);
@@ -124,6 +136,12 @@ public class MainActivity extends AppCompatActivity {
                         back_picture.setImageBitmap(bitmap1);
                         Log.e(TAG,"消息收到+"+imageUri);
                         break;
+                    case CROP_PHOTO_MSG:
+                        imagePath=ForeGroundActivity.bmpPath;
+                        Bitmap bitmap2=BitmapFactory.decodeFile(imagePath);
+                        fore_picture.setImageBitmap(bitmap2);
+                        Log.e(TAG,"消息收到+");
+                        break;
                     default:
                         break;
                 }
@@ -151,6 +169,34 @@ public class MainActivity extends AppCompatActivity {
                 Toast.makeText(this,"settings",Toast.LENGTH_SHORT).show();
                 break;
             default:
+        }
+        return true;
+    }
+
+    //前景图片手指移动指令
+    @Override
+    public boolean onTouch(View v, MotionEvent event) {
+        switch (event.getAction()) {
+            case MotionEvent.ACTION_DOWN:
+                lastX = (int) event.getRawX();
+                lastY = (int) event.getRawY();
+                break;
+            case MotionEvent.ACTION_MOVE:
+                int dx = (int) event.getRawX() - lastX;
+                int dy = (int) event.getRawY() - lastY;
+                int left = v.getLeft() + dx;
+                int top = v.getTop() + dy;
+                int right = v.getRight() + dx;
+                int bottom = v.getBottom() + dy;
+                Log.i("life", " left = " + left + "  v.getLeft=" + v.getLeft()
+                        + " ; event.getRawX = " + event.getRawX() + " ; lastX = "
+                        + lastX + " dx = " + dx);
+                v.layout(left, top, right, bottom);
+                lastX = (int) event.getRawX();
+                lastY = (int) event.getRawY();
+                break;
+            case MotionEvent.ACTION_UP:
+                break;
         }
         return true;
     }

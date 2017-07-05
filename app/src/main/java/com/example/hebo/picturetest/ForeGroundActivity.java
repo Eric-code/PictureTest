@@ -23,6 +23,7 @@ import android.os.Bundle;
 import android.support.v7.widget.PopupMenu;
 import android.support.v7.widget.SearchView;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -32,15 +33,20 @@ import android.widget.Toast;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 
 public class ForeGroundActivity extends AppCompatActivity {
     private SearchView mSearchView;
     PopupMenu popupMenu;
     Menu menu;
+    private static final String TAG = "ForeGroundActivity";
     public static final int TAKE_PHOTO=1;//照相
     public static final int CHOOSE_PHOTO=2;//图库中选择照片
     public static final int EMPTY_ESTIMATE=3;//图片非空判断，防止重新剪裁时报错
+    public static final int CROP_PHOTO_MSG=0x345;
+    public static String bmpPath=null;
+    private Handler forehandler=new Handler();
     private ImageView picture;
     public static Uri imageUri;
     private Handler handler;
@@ -252,7 +258,34 @@ public class ForeGroundActivity extends AppCompatActivity {
         if (extras != null) {
             Bitmap photo = extras.getParcelable("data");
             picture.setImageBitmap(photo);
-
+            Log.e(TAG, "保存图片");
+            File f = new File(getExternalCacheDir(), "forepicture.bmp");
+            if (f.exists()) {
+                f.delete();
+            }
+            try {
+                FileOutputStream out = new FileOutputStream(f);
+                photo.compress(Bitmap.CompressFormat.PNG, 90, out);
+                out.flush();
+                out.close();
+                Log.i(TAG, "已经保存");
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            Uri uri=Uri.fromFile(f);
+            bmpPath=uri.getPath();
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    Message message=new Message();
+                    message.what=CROP_PHOTO_MSG;
+                    forehandler=MainActivity.revHandler;
+                    forehandler.sendMessage(message);
+                }
+            }).start();
+            finish();//结束本活动，就直接显示主界面
         }
     }
 
