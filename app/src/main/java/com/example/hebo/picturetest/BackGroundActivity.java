@@ -16,10 +16,13 @@ import android.provider.MediaStore;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.FileProvider;
+import android.support.v4.view.GravityCompat;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.PopupMenu;
 import android.support.v7.widget.SearchView;
+import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.Menu;
@@ -27,6 +30,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.Toast;
@@ -61,12 +65,18 @@ public class BackGroundActivity extends AppCompatActivity{
         setContentView(R.layout.activity_back_ground);
         //picture=(ImageView)findViewById(R.id.picture);
         handler=new Handler();
+        Toolbar toolbar=(Toolbar)findViewById(R.id.back_toolbar);
+        setSupportActionBar(toolbar);
+        ActionBar actionBar=getSupportActionBar();
+        if (actionBar!=null){
+            actionBar.setDisplayHomeAsUpEnabled(true);
+        }
+
         //搜索框下部检索提示信息显示
         mListView=(ListView)findViewById(R.id.listView);
         adapter=new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, mStrs);
         mListView.setAdapter(adapter);
         mListView.setTextFilterEnabled(true);//过滤数据属性
-
         mSearchView = (SearchView) findViewById(R.id.searchView);
         mSearchView.onActionViewExpanded();// 写上此句后searchView初始是可以点击输入的状态
         // 设置搜索文本监听
@@ -94,6 +104,7 @@ public class BackGroundActivity extends AppCompatActivity{
                 return false;
             }
         });
+
 
         popupMenu = new PopupMenu(this, findViewById(R.id.popupmenu_btn));
         menu = popupMenu.getMenu();
@@ -140,7 +151,17 @@ public class BackGroundActivity extends AppCompatActivity{
                 return false;
             }
         });
+    }
 
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item){
+        switch (item.getItemId()){
+            case android.R.id.home://返回上一级
+                finish();
+                break;
+            default:
+        }
+        return true;
     }
 
     //显示弹出式菜单

@@ -18,10 +18,12 @@ import android.provider.MediaStore;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.FileProvider;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.PopupMenu;
 import android.support.v7.widget.SearchView;
+import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.Menu;
@@ -49,14 +51,18 @@ public class ForeGroundActivity extends AppCompatActivity {
     private Handler forehandler=new Handler();
     private ImageView picture;
     public static Uri imageUri;
-    private Handler handler;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_fore_ground);
         picture=(ImageView)findViewById(R.id.picture1);
-        handler=new Handler();
+        Toolbar toolbar=(Toolbar)findViewById(R.id.fore_toolbar);
+        setSupportActionBar(toolbar);
+        ActionBar actionBar=getSupportActionBar();
+        if (actionBar!=null){
+            actionBar.setDisplayHomeAsUpEnabled(true);
+        }
 
         mSearchView = (SearchView) findViewById(R.id.searchView1);
         mSearchView.onActionViewExpanded();// 写上此句后searchView初始是可以点击输入的状态
@@ -88,7 +94,6 @@ public class ForeGroundActivity extends AppCompatActivity {
         menuInflater.inflate(R.menu.popupmenu, menu);
         // 监听事件
         popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
-
             @Override
             public boolean onMenuItemClick(MenuItem item) {
                 switch (item.getItemId()) {
@@ -128,6 +133,18 @@ public class ForeGroundActivity extends AppCompatActivity {
         });
 
     }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item){
+        switch (item.getItemId()){
+            case android.R.id.home://返回上一级
+                finish();
+                break;
+            default:
+        }
+        return true;
+    }
+
     //显示弹出式菜单
     public void popupmenu(View v) {
         popupMenu.show();
@@ -248,7 +265,7 @@ public class ForeGroundActivity extends AppCompatActivity {
         intent.putExtra("outputX", 150);
         intent.putExtra("outputY", 150);
         intent.putExtra("return-data", true);
-        intent.putExtra("scale", true);
+        intent.putExtra("scale", false);
         startActivityForResult(intent, 3);
     }
 

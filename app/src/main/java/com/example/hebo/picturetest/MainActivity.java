@@ -20,8 +20,10 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import java.io.FileNotFoundException;
@@ -47,6 +49,8 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        final ViewGroup r = (ViewGroup)findViewById (R.id.viewGroup);
+        final ImageView[] imageViews = new ImageView[10];
 
         back_picture=(ImageView)findViewById(R.id.back_picture);
         back_picture.setDrawingCacheEnabled(true);//启动缓存
@@ -79,6 +83,16 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
                         item.setChecked(false);
                         break;
                     case R.id.foregroundpicture:
+                    case R.id.foregroundpicture+1:
+                    case R.id.foregroundpicture+2:
+                    case R.id.foregroundpicture+3:
+                    case R.id.foregroundpicture+4:
+                    case R.id.foregroundpicture+5:
+                    case R.id.foregroundpicture+6:
+                    case R.id.foregroundpicture+7:
+                    case R.id.foregroundpicture+8:
+                    case R.id.foregroundpicture+9:
+                    case R.id.foregroundpicture+10:
                         Log.e(TAG, "显示前景图片+"+item.getItemId());
                         Intent fore_intent=new Intent(MainActivity.this,ForeGroundActivity.class);
                         startActivity(fore_intent);
@@ -118,7 +132,7 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
         revHandler=new Handler(){
             public void handleMessage(Message msg){
                 switch (msg.what){
-                    case TAKE_PHOTO_MSG:
+                    case TAKE_PHOTO_MSG://接收到背景界面拍摄得到的照片
                         imagePath=BackGroundActivity.imagePath;
                         Bitmap bitmap=BitmapFactory.decodeFile(imagePath);
                         back_picture.setImageBitmap(bitmap);
@@ -130,16 +144,29 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
                             e.printStackTrace();
                         }*/
                         break;
-                    case CHOOSE_PHOTO_MSG:
+                    case CHOOSE_PHOTO_MSG://接收到背景界面从相册得到的图片
                         imagePath=BackGroundActivity.imagePath;
                         Bitmap bitmap1=BitmapFactory.decodeFile(imagePath);
                         back_picture.setImageBitmap(bitmap1);
                         Log.e(TAG,"消息收到+"+imageUri);
                         break;
-                    case CROP_PHOTO_MSG:
+                    case CROP_PHOTO_MSG://接收到前景界面裁剪之后的图片
                         imagePath=ForeGroundActivity.bmpPath;
                         Bitmap bitmap2=BitmapFactory.decodeFile(imagePath);
-                        fore_picture.setImageBitmap(bitmap2);
+                        //fore_picture.setImageBitmap(bitmap2);
+                        ImageView mImageView = new ImageView(MainActivity.this);
+                        imageViews[fore_picture_num]=mImageView;
+                        //设置图片长度高度
+                        /*RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
+                        params.addRule(RelativeLayout.ALIGN_PARENT_TOP);
+                        params.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);*/
+                        mImageView.setLayoutParams(new DrawerLayout.LayoutParams(DrawerLayout.LayoutParams.WRAP_CONTENT, DrawerLayout.LayoutParams.WRAP_CONTENT));
+                        mImageView.setImageBitmap(bitmap2);
+                        mImageView.setOnTouchListener(MainActivity.this);
+                        if (fore_picture_num<10){
+                            fore_picture_num++;
+                            r.addView(mImageView);
+                        }
                         Log.e(TAG,"消息收到+");
                         break;
                     default:
@@ -147,7 +174,6 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
                 }
             }
         };
-
     }
 
     //toolbar菜单命令
