@@ -45,6 +45,7 @@ import com.google.gson.Gson;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -70,17 +71,19 @@ public class BackGroundActivity extends AppCompatActivity{
     public static final int CHOOSE_PHOTO=2;//图库中选择照片
     public static final int TAKE_PHOTO_MSG=0x123;
     public static final int CHOOSE_PHOTO_MSG=0x234;
+    public static final int BACK_PIC_CLICK=0x456;
     public static final int UPDATE_BMP=0x12;
+    public static String bmpPath=null;
     //private ImageView picture;
     public static Uri imageUri;
     public static String imagePath=null;
     public static URL imageURL=null;
     private String[] mStrs = {"aaa", "bbb", "ccc", "airsaid"};
-    private String[] result;
-    private String[] result1={"1","2","3","4","5","6","7","8","9","10"};
+    public static String[] result;
+    private String[] result1;
     private Bitmap[] showBmp;
     private URL[] originPhoto,smallPhoto;
-    private Handler handler;
+    public static Handler handler;
     //private ListView mListView;
     ArrayAdapter<String>adapter;
     PicAdapter picAdapter;
@@ -160,6 +163,39 @@ public class BackGroundActivity extends AppCompatActivity{
                         PicAdapter adapter=new PicAdapter(picList);
                         recyclerView.setAdapter(adapter);
                         break;
+                    case BACK_PIC_CLICK:
+                        final int clickNum=msg.arg1;//点击的缩略图序列号
+                        new Thread(new Runnable() {
+                            @Override
+                            public void run() {
+                                Bitmap bitmap3= HttpUtil.returnBitMap(BackGroundActivity.result[clickNum]);
+                                Log.e(TAG,"position:"+clickNum);
+                                Log.e(TAG,"result:"+BackGroundActivity.result[clickNum]);
+                                //把获得的图片保存到本地并将路径传输到主界面中
+                                File f = new File("/sdcard/"+"backpicture.bmp");
+                                if (f.exists()) {
+                                    f.delete();
+                                }
+                                try {
+                                    FileOutputStream out = new FileOutputStream(f);
+                                    bitmap3.compress(Bitmap.CompressFormat.PNG, 90, out);
+                                    out.flush();
+                                    out.close();
+                                    Log.i(TAG, "已经保存");
+                                } catch (FileNotFoundException e) {
+                                    e.printStackTrace();
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
+                                Uri uri=Uri.fromFile(f);
+                                bmpPath=uri.getPath();
+                                Message message=new Message();
+                                message.what=0x567;
+                                handler=MainActivity.revHandler;
+                                handler.sendMessage(message);
+                            }
+                        }).start();
+                        finish();
                     default:
                         break;
                 }
@@ -222,7 +258,6 @@ public class BackGroundActivity extends AppCompatActivity{
             Log.e(TAG,"缩略图:"+photo.getResult1());
             result=photo.getResult();
             result1=photo.getResult1();
-            Uri origin=Uri.parse(result[0]);
             imageURL=new URL(result1[0]);
             imagePath=imageURL.getPath();
             Log.e(TAG,0+"result[j]:"+result1[33]);
@@ -238,7 +273,7 @@ public class BackGroundActivity extends AppCompatActivity{
         new Thread(new Runnable() {
             @Override
             public void run() {
-                for (int i=0;i<35;i++){
+                for (int i=0;i<10;i++){
                     //Bitmap bitmap=BitmapFactory.decodeResource(BackGroundActivity.this.getResources(), R.drawable.apple);
                     Bitmap bitmap=HttpUtil.returnBitMap(result1[i]);
                     Pic pic=new Pic(bitmap);
@@ -251,9 +286,6 @@ public class BackGroundActivity extends AppCompatActivity{
         }).start();
     }
 
-    /*private void initPic(){
-
-    }*/
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item){

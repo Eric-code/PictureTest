@@ -1,5 +1,7 @@
 package com.example.hebo.picturetest.recyclerView;
 
+import android.os.Handler;
+import android.os.Message;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -8,6 +10,8 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.hebo.picturetest.BackGroundActivity;
+import com.example.hebo.picturetest.MainActivity;
 import com.example.hebo.picturetest.R;
 
 import java.util.List;
@@ -17,6 +21,8 @@ import java.util.List;
  */
 public class PicAdapter extends RecyclerView.Adapter<PicAdapter.ViewHolder>{
     private List<Pic> mPicList;
+    private Handler handler=new Handler();
+    private static final int BACK_PIC_CLICK=0x456;
 
     static class ViewHolder extends RecyclerView.ViewHolder {
         View picView;
@@ -48,9 +54,20 @@ public class PicAdapter extends RecyclerView.Adapter<PicAdapter.ViewHolder>{
         holder.picImage.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                int position = holder.getAdapterPosition();
+                final int position = holder.getAdapterPosition();
                 Pic pic = mPicList.get(position);
                 Toast.makeText(v.getContext(), "you clicked image ", Toast.LENGTH_SHORT).show();
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Message message=new Message();
+                        message.what=BACK_PIC_CLICK;
+                        message.arg1=position;
+                        handler= BackGroundActivity.handler;
+                        handler.sendMessage(message);
+                    }
+                }).start();
+
             }
         });
         return holder;
@@ -66,7 +83,4 @@ public class PicAdapter extends RecyclerView.Adapter<PicAdapter.ViewHolder>{
     public int getItemCount() {
         return mPicList.size();
     }
-
-
-
 }

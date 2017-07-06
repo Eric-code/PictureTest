@@ -7,6 +7,10 @@ import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Matrix;
+import android.graphics.Paint;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
@@ -29,6 +33,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.Toast;
@@ -51,6 +56,9 @@ public class ForeGroundActivity extends AppCompatActivity {
     private Handler forehandler=new Handler();
     private ImageView picture;
     public static Uri imageUri;
+    private Bitmap baseBitmap;
+    private Canvas canvas;
+    private Paint paint;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -86,6 +94,49 @@ public class ForeGroundActivity extends AppCompatActivity {
                 return false;
             }
         });
+
+        // 创建一张空白图片
+        baseBitmap = Bitmap.createBitmap(480, 640, Bitmap.Config.ARGB_8888);
+        // 创建一张画布
+        canvas = new Canvas(baseBitmap);
+        // 画布背景为灰色
+        canvas.drawColor(Color.rgb(245,245,245));
+        // 创建画笔
+        paint = new Paint();
+        // 画笔颜色为红色
+        paint.setColor(Color.BLACK);
+        // 宽度5个像素
+        paint.setStrokeWidth(5);
+        // 先将灰色背景画上
+        canvas.drawBitmap(baseBitmap, new Matrix(), paint);
+        picture.setImageBitmap(baseBitmap);
+        picture.setOnTouchListener(new View.OnTouchListener() {
+            int startX;
+            int startY;
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                switch (event.getAction()) {
+                    case MotionEvent.ACTION_DOWN:
+                        // 获取手按下时的坐标
+                        startX = (int) event.getX();
+                        startY = (int) event.getY();
+                        break;
+                    case MotionEvent.ACTION_MOVE:
+                        // 获取手移动后的坐标
+                        int stopX = (int) event.getX();
+                        int stopY = (int) event.getY();
+                        // 在开始和结束坐标间画一条线
+                        canvas.drawLine(startX, startY, stopX, stopY, paint);
+                        // 实时更新开始坐标
+                        startX = (int) event.getX();
+                        startY = (int) event.getY();
+                        picture.setImageBitmap(baseBitmap);
+                        break;
+                    }
+                return true;
+            }
+        });
+
 
         popupMenu = new PopupMenu(this, findViewById(R.id.popupmenu_btn1));
         menu = popupMenu.getMenu();
@@ -154,8 +205,6 @@ public class ForeGroundActivity extends AppCompatActivity {
     private void openAlbum(){
         Intent intent=new Intent("android.intent.action.GET_CONTENT");
         intent.setType("image/*");
-        //Intent intent = new Intent(Intent.ACTION_PICK, null);
-        //intent.setDataAndType(MediaStore.Images.Media.EXTERNAL_CONTENT_URI,"image");
         startActivityForResult(intent,CHOOSE_PHOTO);
     }
 
@@ -275,24 +324,7 @@ public class ForeGroundActivity extends AppCompatActivity {
         if (extras != null) {
             Bitmap photo = extras.getParcelable("data");
             picture.setImageBitmap(photo);
-            Log.e(TAG, "保存图片");
-            File f = new File(getExternalCacheDir(), "forepicture.bmp");
-            if (f.exists()) {
-                f.delete();
-            }
-            try {
-                FileOutputStream out = new FileOutputStream(f);
-                photo.compress(Bitmap.CompressFormat.PNG, 90, out);
-                out.flush();
-                out.close();
-                Log.i(TAG, "已经保存");
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            Uri uri=Uri.fromFile(f);
-            bmpPath=uri.getPath();
+            picSave(photo);
             new Thread(new Runnable() {
                 @Override
                 public void run() {
@@ -304,6 +336,27 @@ public class ForeGroundActivity extends AppCompatActivity {
             }).start();
             finish();//结束本活动，就直接显示主界面
         }
+    }
+
+    private void picSave(Bitmap bitmap){
+        Log.e(TAG, "保存图片");
+        File f = new File(getExternalCacheDir(), "forepicture.bmp");
+        if (f.exists()) {
+            f.delete();
+        }
+        try {
+            FileOutputStream out = new FileOutputStream(f);
+            bitmap.compress(Bitmap.CompressFormat.PNG, 90, out);
+            out.flush();
+            out.close();
+            Log.i(TAG, "已经保存");
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        Uri uri=Uri.fromFile(f);
+        bmpPath=uri.getPath();
     }
 
     private void cropPic(String imagePath) {
