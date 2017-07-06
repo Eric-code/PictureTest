@@ -21,7 +21,9 @@ import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.PopupMenu;
+import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
+import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.util.Log;
@@ -35,14 +37,20 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import com.example.hebo.picturetest.recyclerView.Pic;
+import com.example.hebo.picturetest.recyclerView.PicAdapter;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 
 public class BackGroundActivity extends AppCompatActivity{
+    private List<Pic> picList=new ArrayList<>();
+
     private SearchView mSearchView;
     PopupMenu popupMenu;
     Menu menu;
@@ -56,7 +64,7 @@ public class BackGroundActivity extends AppCompatActivity{
     public static String imagePath=null;
     private String[] mStrs = {"aaa", "bbb", "ccc", "airsaid"};
     private Handler handler;
-    private ListView mListView;
+    //private ListView mListView;
     ArrayAdapter<String>adapter;
 
     @Override
@@ -73,12 +81,15 @@ public class BackGroundActivity extends AppCompatActivity{
         }
 
         //搜索框下部检索提示信息显示
-        mListView=(ListView)findViewById(R.id.listView);
+        //mListView=(ListView)findViewById(R.id.listView);
         adapter=new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, mStrs);
-        mListView.setAdapter(adapter);
-        mListView.setTextFilterEnabled(true);//过滤数据属性
+        //mListView.setAdapter(adapter);
+        //mListView.setTextFilterEnabled(true);//过滤数据属性
         mSearchView = (SearchView) findViewById(R.id.searchView);
         mSearchView.onActionViewExpanded();// 写上此句后searchView初始是可以点击输入的状态
+        mSearchView.setIconifiedByDefault(false);//默认不自动缩小成图标
+        mSearchView.setSubmitButtonEnabled(true);//显示搜索按钮
+        mSearchView.setQueryHint("搜索图片");
         // 设置搜索文本监听
         mSearchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             // 当点击搜索按钮时触发该方法
@@ -98,12 +109,21 @@ public class BackGroundActivity extends AppCompatActivity{
                     //Toast.makeText(BackGroundActivity.this,"搜索成功",Toast.LENGTH_SHORT).show();
                 }else{
                     adapter.getFilter().filter("");
-                    mListView.clearTextFilter();
+                    //mListView.clearTextFilter();
                     //Toast.makeText(BackGroundActivity.this,"搜索内容为空",Toast.LENGTH_SHORT).show();
                 }
                 return false;
             }
         });
+
+        //瀑布流列表的实现
+        initPic();
+        RecyclerView recyclerView = (RecyclerView) findViewById(R.id.recycler_view);
+        StaggeredGridLayoutManager layoutManager = new
+                StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL);
+        recyclerView.setLayoutManager(layoutManager);
+        PicAdapter adapter=new PicAdapter(picList);
+        recyclerView.setAdapter(adapter);
 
 
         popupMenu = new PopupMenu(this, findViewById(R.id.popupmenu_btn));
@@ -151,6 +171,21 @@ public class BackGroundActivity extends AppCompatActivity{
                 return false;
             }
         });
+    }
+
+    private void initPic(){
+        for (int i = 0; i < 3; i++) {
+            Pic apple=new Pic(R.drawable.apple_pic);
+            picList.add(apple);
+            Pic laucher=new Pic(R.drawable.ic_launcher);
+            picList.add(laucher);
+            Pic background=new Pic(R.drawable.background_picture);
+            picList.add(background);
+            Pic banana=new Pic(R.drawable.banana_pic);
+            picList.add(banana);
+            Pic pineapple=new Pic(R.drawable.pineapple_pic);
+            picList.add(pineapple);
+        }
     }
 
     @Override

@@ -37,20 +37,22 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
     public static final int CROP_PHOTO_MSG=0x345;
     private DrawerLayout mdrawerLayout;//滑动菜单
     public ImageView back_picture,fore_picture;
-    int fore_picture_num=0;
+    int fore_picture_item_num=0;//前景图片选项的数目
+    int fore_picture_num=0;//前景图片的数目
     public Uri imageUri;
     public String imagePath=null;
     public static Handler revHandler;
     Canvas canvas;
     int lastX, lastY;
-
+    boolean itemEable=false;
+    final ImageView[] imageViews = new ImageView[10];
+    NavigationView navigationView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         final ViewGroup r = (ViewGroup)findViewById (R.id.viewGroup);
-        final ImageView[] imageViews = new ImageView[10];
 
         back_picture=(ImageView)findViewById(R.id.back_picture);
         back_picture.setDrawingCacheEnabled(true);//启动缓存
@@ -67,20 +69,21 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
             actionBar.setHomeAsUpIndicator(R.drawable.ic_menu);
         }
 
-        final NavigationView navigationView=(NavigationView)findViewById(R.id.nav_view);//获取滑动菜单实例
+        navigationView=(NavigationView)findViewById(R.id.nav_view);//获取滑动菜单实例
         navigationView.setItemIconTintList(null);//设置每个图标为原来的颜色
         navigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
             @Override
             public boolean onNavigationItemSelected(MenuItem item) {
                 //在这里处理item的点击事件
-                item.setCheckable(true);//设置选项可选
+                //item.setCheckable(true);//设置选项可选
+                Intent fore_intent=new Intent(MainActivity.this,ForeGroundActivity.class);
                 switch (item.getItemId()){
                     case R.id.backgroundpicture:
                         Log.e(TAG, "显示背景图片+"+item.getItemId());
                         Intent back_intent=new Intent(MainActivity.this,BackGroundActivity.class);
                         startActivity(back_intent);
                         item.setCheckable(false);//设置选项不可选
-                        item.setChecked(false);
+                        item.setChecked(true);
                         break;
                     case R.id.foregroundpicture:
                     case R.id.foregroundpicture+1:
@@ -94,10 +97,10 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
                     case R.id.foregroundpicture+9:
                     case R.id.foregroundpicture+10:
                         Log.e(TAG, "显示前景图片+"+item.getItemId());
-                        Intent fore_intent=new Intent(MainActivity.this,ForeGroundActivity.class);
                         startActivity(fore_intent);
                         item.setCheckable(false);//设置选项不可选
-                        item.setChecked(false);
+                        item.setChecked(true);
+                        //item.setEnabled(false);
                         break;
                     default:
                 }
@@ -111,9 +114,9 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
         add_btn.setOnClickListener(new View.OnClickListener() {//添加前景图片菜单项
             @Override
             public void onClick(View v) {
-                if (fore_picture_num<10){
-                    fore_picture_num++;
-                    navigationView.getMenu().add(R.id.g1,R.id.foregroundpicture+fore_picture_num,1,"前景图片"+fore_picture_num).setIcon(R.drawable.foreground_picture);
+                if (fore_picture_item_num<10){
+                    fore_picture_item_num++;
+                    navigationView.getMenu().add(R.id.g1,R.id.foregroundpicture+fore_picture_item_num,1,"前景图片"+fore_picture_item_num).setIcon(R.drawable.foreground_picture);
                     //Toast.makeText(MainActivity.this,"添加前景+"+fore_picture_num,Toast.LENGTH_SHORT).show();
                 }
             }
@@ -121,9 +124,9 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
         minus_btn.setOnClickListener(new View.OnClickListener() {//删除前景图片菜单项
             @Override
             public void onClick(View v) {
-                if (fore_picture_num>0){
-                    navigationView.getMenu().removeItem(R.id.foregroundpicture+fore_picture_num);
-                    fore_picture_num--;
+                if (fore_picture_item_num>0){
+                    navigationView.getMenu().removeItem(R.id.foregroundpicture+fore_picture_item_num);
+                    fore_picture_item_num--;
                    // Toast.makeText(MainActivity.this,"删除前景+"+fore_picture_num,Toast.LENGTH_SHORT).show();
                 }
             }
@@ -135,6 +138,7 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
                     case TAKE_PHOTO_MSG://接收到背景界面拍摄得到的照片
                         imagePath=BackGroundActivity.imagePath;
                         Bitmap bitmap=BitmapFactory.decodeFile(imagePath);
+                        back_picture.setWillNotDraw(false);
                         back_picture.setImageBitmap(bitmap);
                         Log.e(TAG,"消息收到+"+imageUri);
                         /*try {
@@ -148,6 +152,7 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
                         imagePath=BackGroundActivity.imagePath;
                         Bitmap bitmap1=BitmapFactory.decodeFile(imagePath);
                         back_picture.setImageBitmap(bitmap1);
+                        back_picture.setWillNotDraw(false);
                         Log.e(TAG,"消息收到+"+imageUri);
                         break;
                     case CROP_PHOTO_MSG://接收到前景界面裁剪之后的图片
@@ -162,6 +167,7 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
                         params.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);*/
                         mImageView.setLayoutParams(new DrawerLayout.LayoutParams(DrawerLayout.LayoutParams.WRAP_CONTENT, DrawerLayout.LayoutParams.WRAP_CONTENT));
                         mImageView.setImageBitmap(bitmap2);
+                        mImageView.setWillNotDraw(false);
                         mImageView.setOnTouchListener(MainActivity.this);
                         if (fore_picture_num<10){
                             fore_picture_num++;
@@ -189,9 +195,23 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
                 mdrawerLayout.openDrawer(GravityCompat.START);
                 break;
             case R.id.delete:
+                back_picture.setWillNotDraw(true);
+                //清除imageView中的图片
+                if (fore_picture_num>0){
+                    for (int i=0;i<fore_picture_num;i++){
+                        imageViews[i].setWillNotDraw(true);
+                    }
+                }
+                //删除前景图片的菜单选项
+                if (fore_picture_item_num>0){
+                    for (int i=fore_picture_item_num;i>0;i--){
+                        navigationView.getMenu().removeItem(R.id.foregroundpicture+fore_picture_item_num);
+                        fore_picture_item_num--;
+                    }
+                }
                 Toast.makeText(this,"delete",Toast.LENGTH_SHORT).show();
                 break;
-            case R.id.settings:
+            case R.id.save:
                 Toast.makeText(this,"settings",Toast.LENGTH_SHORT).show();
                 break;
             default:
@@ -226,6 +246,5 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
         }
         return true;
     }
-
 
 }

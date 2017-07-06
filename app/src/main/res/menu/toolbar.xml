@@ -5,10 +5,11 @@
         android:id="@+id/delete"
         android:icon="@drawable/delete"
         android:title="Delete"
-        app:showAsAction="ifRoom"/>
+        app:showAsAction="always"/>
     <item
-        android:id="@+id/settings"
+        android:id="@+id/save"
+        android:icon="@drawable/save"
         android:title="Settings"
-        app:showAsAction="never"/>
+        app:showAsAction="always"/>
 
 </menu>
