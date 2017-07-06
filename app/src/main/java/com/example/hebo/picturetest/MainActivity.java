@@ -27,6 +27,10 @@ import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
 
@@ -40,6 +44,7 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
     int fore_picture_item_num=0;//前景图片选项的数目
     int fore_picture_num=0;//前景图片的数目
     public Uri imageUri;
+    public URL imageURL;
     public String imagePath=null;
     public static Handler revHandler;
     Canvas canvas;
@@ -137,7 +142,8 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
                 switch (msg.what){
                     case TAKE_PHOTO_MSG://接收到背景界面拍摄得到的照片
                         imagePath=BackGroundActivity.imagePath;
-                        Bitmap bitmap=BitmapFactory.decodeFile(imagePath);
+                        //Bitmap bitmap=BitmapFactory.decodeFile(imagePath);
+                        Bitmap bitmap=(Bitmap)msg.obj;
                         back_picture.setWillNotDraw(false);
                         back_picture.setImageBitmap(bitmap);
                         Log.e(TAG,"消息收到+"+imageUri);
@@ -180,6 +186,31 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
                 }
             }
         };
+    }
+
+    //将网络图片转化为Bitmap
+    public static Bitmap returnBitMap(String url) {
+        URL myFileUrl = null;
+        Bitmap bitmap = null;
+        try {
+            myFileUrl = new URL(url);
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        }
+        try {
+            HttpURLConnection conn = (HttpURLConnection) myFileUrl.openConnection();
+            conn.setRequestMethod("GET");
+            conn.setConnectTimeout(8000);
+            conn.setReadTimeout(8000);
+            conn.setDoInput(true);
+            //conn.connect();
+            InputStream is = conn.getInputStream();
+            bitmap = BitmapFactory.decodeStream(is);
+            is.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return bitmap;
     }
 
     //toolbar菜单命令

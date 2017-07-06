@@ -37,15 +37,25 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import com.example.hebo.picturetest.JSON.HttpUtil;
+import com.example.hebo.picturetest.JSON.Photo;
 import com.example.hebo.picturetest.recyclerView.Pic;
 import com.example.hebo.picturetest.recyclerView.PicAdapter;
+import com.google.gson.Gson;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.FormBody;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 
 
 public class BackGroundActivity extends AppCompatActivity{
@@ -62,10 +72,12 @@ public class BackGroundActivity extends AppCompatActivity{
     //private ImageView picture;
     public static Uri imageUri;
     public static String imagePath=null;
+    public static URL imageURL=null;
     private String[] mStrs = {"aaa", "bbb", "ccc", "airsaid"};
     private Handler handler;
     //private ListView mListView;
     ArrayAdapter<String>adapter;
+    PicAdapter picAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -95,14 +107,28 @@ public class BackGroundActivity extends AppCompatActivity{
             // 当点击搜索按钮时触发该方法
             @Override
             public boolean onQueryTextSubmit(String query) {
+                //发送网络请求
+                RequestBody requestBody=new FormBody.Builder()
+                        .add("queryexpression",query)//提交的请求
+                        .build();
+                HttpUtil.sendOkHttpRequest("http://10.108.125.20:8900/flaskr2/resAndroid",requestBody,new Callback(){
+                    //得到服务器返回的具体内容
+                    @Override
+                    public void onResponse(Call call, Response response) throws IOException {
+                        String responseData=response.body().string();
+                        parseJSONWithGSON(responseData);
+                    }
+                    //对异常情况进行处理
+                    @Override
+                    public void onFailure(Call call, IOException e) {
+                        //Toast.makeText(BackGroundActivity.this, "图片加载失败", Toast.LENGTH_SHORT).show();
+                    }
+                });
                 return false;
             }
             // 当搜索内容改变时触发该方法
             @Override
             public boolean onQueryTextChange(String newText) {
-                /*Object[] obj = searchItem(newText);
-                updateLayout(obj);
-                return true;*/
                 if (!TextUtils.isEmpty(newText)){
                     adapter.getFilter().filter(newText.toString());
                     //mListView.setFilterText(newText);
@@ -124,7 +150,6 @@ public class BackGroundActivity extends AppCompatActivity{
         recyclerView.setLayoutManager(layoutManager);
         PicAdapter adapter=new PicAdapter(picList);
         recyclerView.setAdapter(adapter);
-
 
         popupMenu = new PopupMenu(this, findViewById(R.id.popupmenu_btn));
         menu = popupMenu.getMenu();
@@ -171,6 +196,46 @@ public class BackGroundActivity extends AppCompatActivity{
                 return false;
             }
         });
+    }
+
+    //处理网络数据
+    private void parseJSONWithGSON(String jsonData){
+        Gson gson=new Gson();
+        try {
+            Photo photo=gson.fromJson(jsonData,Photo.class);
+            Log.e(TAG,"原图:"+photo.getResult());
+            Log.e(TAG,"缩略图:"+photo.getResult1());
+            String[] result=photo.getResult();
+            String[] result1=photo.getResult1();
+            Uri origin=Uri.parse(result[0]);
+            imageURL=new URL(result1[0]);
+            imagePath=imageURL.getPath();
+            Log.e(TAG,0+"result[j]:"+result1[0]);
+            Log.e(TAG,"URL:"+imageURL);
+            Log.e(TAG,1+"result[j]:"+result1[1]);
+            Log.e(TAG,2+"result[j]:"+result1[2]);
+            //Bitmap bitmapphoto= BitmapFactory.decodeStream(getContentResolver().openInputStream(small));
+            //Pic pic=new Pic(bitmapphoto);
+            //picList.add(pic);
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                Bitmap bmp=MainActivity.returnBitMap("https://tse3.mm.bing.net/th?id=OIP.H-GCXevlFf9FasefGCDAkgEsDG&pid=Api");
+                Message message=new Message();
+                message.what=TAKE_PHOTO_MSG;
+                message.obj=bmp;
+                handler=MainActivity.revHandler;
+                handler.sendMessage(message);
+            }
+        }).start();
+        finish();//结束本活动，就直接显示主界面
+        /*List<Photo> photoList=gson.fromJson(jsonData,new TypeToken<List<Photo>>(){}.getType());
+        for (Photo photo:photoList){
+            Log.e(TAG,"result is "+photo.getPhotoUrl());
+        }*/
     }
 
     private void initPic(){
