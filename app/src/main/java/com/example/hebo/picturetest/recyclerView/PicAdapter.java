@@ -42,7 +42,7 @@ public class PicAdapter extends RecyclerView.Adapter<PicAdapter.ViewHolder>{
             public void onClick(View v) {
                 int position = holder.getAdapterPosition();
                 Pic pic = mPicList.get(position);
-                Toast.makeText(v.getContext(), "you clicked view " +pic.getImageId(), Toast.LENGTH_SHORT).show();
+                Toast.makeText(v.getContext(), "you clicked view " , Toast.LENGTH_SHORT).show();
             }
         });
         holder.picImage.setOnClickListener(new View.OnClickListener() {
@@ -50,7 +50,7 @@ public class PicAdapter extends RecyclerView.Adapter<PicAdapter.ViewHolder>{
             public void onClick(View v) {
                 int position = holder.getAdapterPosition();
                 Pic pic = mPicList.get(position);
-                Toast.makeText(v.getContext(), "you clicked image "+pic.getImageId(), Toast.LENGTH_SHORT).show();
+                Toast.makeText(v.getContext(), "you clicked image ", Toast.LENGTH_SHORT).show();
             }
         });
         return holder;
@@ -59,7 +59,7 @@ public class PicAdapter extends RecyclerView.Adapter<PicAdapter.ViewHolder>{
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
         Pic pic = mPicList.get(position);
-        holder.picImage.setImageResource(pic.getImageId());
+        holder.picImage.setImageBitmap(pic.getBmpId());
     }
 
     @Override

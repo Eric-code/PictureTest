@@ -1,16 +1,18 @@
 package com.example.hebo.picturetest.recyclerView;
 
+import android.graphics.Bitmap;
+
 /**
  * Created by 何波 on 2017/7/6.
  */
 public class Pic {
-    private int imageId;
+    private Bitmap BmpId;
 
-    public Pic(int imageId){
-        this.imageId=imageId;
+    public Pic(Bitmap BmpId){
+        this.BmpId=BmpId;
     }
 
-    public int getImageId() {
-        return imageId;
+    public Bitmap getBmpId() {
+        return BmpId;
     }
 }

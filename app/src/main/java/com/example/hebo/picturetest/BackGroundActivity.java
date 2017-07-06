@@ -46,6 +46,7 @@ import com.google.gson.Gson;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
@@ -69,11 +70,16 @@ public class BackGroundActivity extends AppCompatActivity{
     public static final int CHOOSE_PHOTO=2;//图库中选择照片
     public static final int TAKE_PHOTO_MSG=0x123;
     public static final int CHOOSE_PHOTO_MSG=0x234;
+    public static final int UPDATE_BMP=0x12;
     //private ImageView picture;
     public static Uri imageUri;
     public static String imagePath=null;
     public static URL imageURL=null;
     private String[] mStrs = {"aaa", "bbb", "ccc", "airsaid"};
+    private String[] result;
+    private String[] result1={"1","2","3","4","5","6","7","8","9","10"};
+    private Bitmap[] showBmp;
+    private URL[] originPhoto,smallPhoto;
     private Handler handler;
     //private ListView mListView;
     ArrayAdapter<String>adapter;
@@ -84,7 +90,7 @@ public class BackGroundActivity extends AppCompatActivity{
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_back_ground);
         //picture=(ImageView)findViewById(R.id.picture);
-        handler=new Handler();
+
         Toolbar toolbar=(Toolbar)findViewById(R.id.back_toolbar);
         setSupportActionBar(toolbar);
         ActionBar actionBar=getSupportActionBar();
@@ -143,13 +149,22 @@ public class BackGroundActivity extends AppCompatActivity{
         });
 
         //瀑布流列表的实现
-        initPic();
-        RecyclerView recyclerView = (RecyclerView) findViewById(R.id.recycler_view);
-        StaggeredGridLayoutManager layoutManager = new
-                StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL);
-        recyclerView.setLayoutManager(layoutManager);
-        PicAdapter adapter=new PicAdapter(picList);
-        recyclerView.setAdapter(adapter);
+        handler=new Handler(){
+            public void handleMessage(Message msg){
+                switch (msg.what){
+                    case UPDATE_BMP:
+                        //initPic();
+                        RecyclerView recyclerView = (RecyclerView) findViewById(R.id.recycler_view);
+                        StaggeredGridLayoutManager layoutManager = new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL);
+                        recyclerView.setLayoutManager(layoutManager);
+                        PicAdapter adapter=new PicAdapter(picList);
+                        recyclerView.setAdapter(adapter);
+                        break;
+                    default:
+                        break;
+                }
+            }
+        };
 
         popupMenu = new PopupMenu(this, findViewById(R.id.popupmenu_btn));
         menu = popupMenu.getMenu();
@@ -205,53 +220,40 @@ public class BackGroundActivity extends AppCompatActivity{
             Photo photo=gson.fromJson(jsonData,Photo.class);
             Log.e(TAG,"原图:"+photo.getResult());
             Log.e(TAG,"缩略图:"+photo.getResult1());
-            String[] result=photo.getResult();
-            String[] result1=photo.getResult1();
+            result=photo.getResult();
+            result1=photo.getResult1();
             Uri origin=Uri.parse(result[0]);
             imageURL=new URL(result1[0]);
             imagePath=imageURL.getPath();
-            Log.e(TAG,0+"result[j]:"+result1[0]);
-            Log.e(TAG,"URL:"+imageURL);
+            Log.e(TAG,0+"result[j]:"+result1[33]);
             Log.e(TAG,1+"result[j]:"+result1[1]);
             Log.e(TAG,2+"result[j]:"+result1[2]);
-            //Bitmap bitmapphoto= BitmapFactory.decodeStream(getContentResolver().openInputStream(small));
-            //Pic pic=new Pic(bitmapphoto);
-            //picList.add(pic);
+            upDataePic();
         }catch (Exception e){
             e.printStackTrace();
         }
+    }
+
+    private void upDataePic(){
         new Thread(new Runnable() {
             @Override
             public void run() {
-                Bitmap bmp=MainActivity.returnBitMap("https://tse3.mm.bing.net/th?id=OIP.H-GCXevlFf9FasefGCDAkgEsDG&pid=Api");
+                for (int i=0;i<35;i++){
+                    //Bitmap bitmap=BitmapFactory.decodeResource(BackGroundActivity.this.getResources(), R.drawable.apple);
+                    Bitmap bitmap=HttpUtil.returnBitMap(result1[i]);
+                    Pic pic=new Pic(bitmap);
+                    picList.add(pic);
+                }
                 Message message=new Message();
-                message.what=TAKE_PHOTO_MSG;
-                message.obj=bmp;
-                handler=MainActivity.revHandler;
+                message.what=UPDATE_BMP;
                 handler.sendMessage(message);
             }
         }).start();
-        finish();//结束本活动，就直接显示主界面
-        /*List<Photo> photoList=gson.fromJson(jsonData,new TypeToken<List<Photo>>(){}.getType());
-        for (Photo photo:photoList){
-            Log.e(TAG,"result is "+photo.getPhotoUrl());
-        }*/
     }
 
-    private void initPic(){
-        for (int i = 0; i < 3; i++) {
-            Pic apple=new Pic(R.drawable.apple_pic);
-            picList.add(apple);
-            Pic laucher=new Pic(R.drawable.ic_launcher);
-            picList.add(laucher);
-            Pic background=new Pic(R.drawable.background_picture);
-            picList.add(background);
-            Pic banana=new Pic(R.drawable.banana_pic);
-            picList.add(banana);
-            Pic pineapple=new Pic(R.drawable.pineapple_pic);
-            picList.add(pineapple);
-        }
-    }
+    /*private void initPic(){
+
+    }*/
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item){
