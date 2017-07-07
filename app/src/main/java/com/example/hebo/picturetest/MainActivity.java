@@ -173,9 +173,6 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
                         ImageView mImageView = new ImageView(MainActivity.this);
                         imageViews[fore_picture_num]=mImageView;
                         //设置图片长度高度
-                        /*RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
-                        params.addRule(RelativeLayout.ALIGN_PARENT_TOP);
-                        params.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);*/
                         mImageView.setLayoutParams(new DrawerLayout.LayoutParams(DrawerLayout.LayoutParams.WRAP_CONTENT, DrawerLayout.LayoutParams.WRAP_CONTENT));
                         mImageView.setImageBitmap(bitmap2);
                         mImageView.setWillNotDraw(false);

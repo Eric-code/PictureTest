@@ -37,8 +37,8 @@ public class HttpUtil {
         try {
             HttpURLConnection conn = (HttpURLConnection) myFileUrl.openConnection();
             conn.setRequestMethod("GET");
-            conn.setConnectTimeout(8000);
-            conn.setReadTimeout(8000);
+            conn.setConnectTimeout(50000);
+            conn.setReadTimeout(50000);
             conn.setDoInput(true);
             //conn.connect();
             InputStream is = conn.getInputStream();

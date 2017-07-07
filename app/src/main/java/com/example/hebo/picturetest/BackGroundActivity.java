@@ -86,7 +86,7 @@ public class BackGroundActivity extends AppCompatActivity{
     public static Handler handler;
     //private ListView mListView;
     ArrayAdapter<String>adapter;
-    PicAdapter picAdapter;
+    private boolean picListEmpty=true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -156,7 +156,6 @@ public class BackGroundActivity extends AppCompatActivity{
             public void handleMessage(Message msg){
                 switch (msg.what){
                     case UPDATE_BMP:
-                        //initPic();
                         RecyclerView recyclerView = (RecyclerView) findViewById(R.id.recycler_view);
                         StaggeredGridLayoutManager layoutManager = new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL);
                         recyclerView.setLayoutManager(layoutManager);
@@ -277,8 +276,12 @@ public class BackGroundActivity extends AppCompatActivity{
                     //Bitmap bitmap=BitmapFactory.decodeResource(BackGroundActivity.this.getResources(), R.drawable.apple);
                     Bitmap bitmap=HttpUtil.returnBitMap(result1[i]);
                     Pic pic=new Pic(bitmap);
+                    if (!picListEmpty){//判断之前照片列表中是否有之前搜索产生的图片
+                        picList.remove(i);
+                    }
                     picList.add(i,pic);
                 }
+                picListEmpty=false;
                 Message message=new Message();
                 message.what=UPDATE_BMP;
                 handler.sendMessage(message);
