@@ -11,6 +11,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.Paint;
+import android.graphics.PorterDuff;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
@@ -19,6 +20,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.FileProvider;
@@ -26,7 +28,9 @@ import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.PopupMenu;
+import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
+import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.util.Log;
@@ -35,15 +39,34 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.Toast;
+
+import com.example.hebo.picturetest.JSON.HttpUtil;
+import com.example.hebo.picturetest.JSON.Photo;
+import com.example.hebo.picturetest.JSON.PhotoDraft;
+import com.example.hebo.picturetest.image.ImageUtil;
+import com.example.hebo.picturetest.recyclerView.Pic;
+import com.example.hebo.picturetest.recyclerView.PicAdapter;
+import com.google.gson.Gson;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
+
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.FormBody;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 
 public class ForeGroundActivity extends AppCompatActivity {
+    private List<Pic> picList=new ArrayList<>();
     private SearchView mSearchView;
     PopupMenu popupMenu;
     Menu menu;
@@ -52,19 +75,33 @@ public class ForeGroundActivity extends AppCompatActivity {
     public static final int CHOOSE_PHOTO=2;//图库中选择照片
     public static final int EMPTY_ESTIMATE=3;//图片非空判断，防止重新剪裁时报错
     public static final int CROP_PHOTO_MSG=0x345;
+    public static final int UPDATE_BMP=0x12;
+    public static final int CHANGE_UI=0x23;
     public static String bmpPath=null;
+    public static String[] result;
     private Handler forehandler=new Handler();
     private ImageView picture;
+    private RecyclerView recyclerView;
+    private Button popButton;
+    private FloatingActionButton okButton,quitButton;
     public static Uri imageUri;
+    public static String imagePath=null;
+    public static URL imageURL=null;
     private Bitmap baseBitmap;
     private Canvas canvas;
     private Paint paint;
+    private boolean canvasEmpty=true;
+    private boolean picListEmpty=true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_fore_ground);
         picture=(ImageView)findViewById(R.id.picture1);
+        recyclerView=(RecyclerView)findViewById(R.id.recycler_view1);
+        popButton=(Button)findViewById(R.id.popupmenu_btn1);
+        okButton=(FloatingActionButton) findViewById(R.id.okButton);
+        quitButton=(FloatingActionButton)findViewById(R.id.quitButton);
         Toolbar toolbar=(Toolbar)findViewById(R.id.fore_toolbar);
         setSupportActionBar(toolbar);
         ActionBar actionBar=getSupportActionBar();
@@ -96,18 +133,19 @@ public class ForeGroundActivity extends AppCompatActivity {
         });
 
         // 创建一张空白图片
-        baseBitmap = Bitmap.createBitmap(480, 640, Bitmap.Config.ARGB_8888);
+        baseBitmap = Bitmap.createBitmap(720, 1000, Bitmap.Config.ARGB_8888);
         // 创建一张画布
         canvas = new Canvas(baseBitmap);
-        // 画布背景为灰色
+        // 画布背景为白色
         canvas.drawColor(Color.rgb(245,245,245));
         // 创建画笔
         paint = new Paint();
-        // 画笔颜色为红色
+        // 画笔颜色为黑色
         paint.setColor(Color.BLACK);
         // 宽度5个像素
         paint.setStrokeWidth(5);
-        // 先将灰色背景画上
+        // 先将白色背景画上
+        canvas.drawColor(Color.rgb(245,245,245),PorterDuff.Mode.CLEAR);
         canvas.drawBitmap(baseBitmap, new Matrix(), paint);
         picture.setImageBitmap(baseBitmap);
         picture.setOnTouchListener(new View.OnTouchListener() {
@@ -127,6 +165,7 @@ public class ForeGroundActivity extends AppCompatActivity {
                         int stopY = (int) event.getY();
                         // 在开始和结束坐标间画一条线
                         canvas.drawLine(startX, startY, stopX, stopY, paint);
+                        canvasEmpty=false;
                         // 实时更新开始坐标
                         startX = (int) event.getX();
                         startY = (int) event.getY();
@@ -136,6 +175,69 @@ public class ForeGroundActivity extends AppCompatActivity {
                 return true;
             }
         });
+        //悬浮按钮，发送图片信息
+        okButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (!canvasEmpty){
+                    picSave(baseBitmap);
+                    String base64String=ImageUtil.bitmapToString(bmpPath);
+                    Log.e(TAG,"press"+base64String);
+                    //发送网络请求
+                    RequestBody requestBody=new FormBody.Builder()
+                            .add("value",base64String)//提交的请求
+                            .build();
+                    HttpUtil.sendOkHttpRequest("http://10.108.125.20:8900/flaskr2/draftAndroid",requestBody,new Callback(){
+                        //得到服务器返回的具体内容
+                        @Override
+                        public void onResponse(Call call, Response response) throws IOException {
+                            String responseData=response.body().string();
+                            parseJSONWithGSON(responseData);
+                        }
+                        //对异常情况进行处理
+                        @Override
+                        public void onFailure(Call call, IOException e) {
+                            //Toast.makeText(BackGroundActivity.this, "图片加载失败", Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                }else {
+                    Toast.makeText(ForeGroundActivity.this, "手绘图片为空", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+        //悬浮按钮，清除画布
+        quitButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                canvas.drawColor(Color.rgb(245,245,245),PorterDuff.Mode.CLEAR);
+                picture.setImageBitmap(baseBitmap);
+                canvasEmpty=true;
+            }
+        });
+
+        //瀑布流列表的实现
+        forehandler=new Handler(){
+            public void handleMessage(Message msg){
+                switch (msg.what){
+                    case UPDATE_BMP:
+                        recyclerView.setVisibility(View.VISIBLE);
+                        mSearchView.setVisibility(View.VISIBLE);
+                        popButton.setVisibility(View.VISIBLE);
+                        picture.setVisibility(View.GONE);
+                        okButton.setVisibility(View.GONE);
+                        quitButton.setVisibility(View.GONE);
+                        StaggeredGridLayoutManager layoutManager = new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL);
+                        recyclerView.setLayoutManager(layoutManager);
+                        PicAdapter adapter=new PicAdapter(picList);
+                        recyclerView.setAdapter(adapter);
+                        Log.e(TAG,"图形绘制");
+                        break;
+
+                    default:
+                        break;
+                }
+            }
+        };
 
 
         popupMenu = new PopupMenu(this, findViewById(R.id.popupmenu_btn1));
@@ -148,14 +250,14 @@ public class ForeGroundActivity extends AppCompatActivity {
             @Override
             public boolean onMenuItemClick(MenuItem item) {
                 switch (item.getItemId()) {
-                    case R.id.choose_from_album:
+                    case R.id.choose_from_album://从相册中选择照片
                         if (ContextCompat.checkSelfPermission(ForeGroundActivity.this, android.Manifest.permission.WRITE_EXTERNAL_STORAGE)!= PackageManager.PERMISSION_GRANTED){
                             ActivityCompat.requestPermissions(ForeGroundActivity.this,new String[]{android.Manifest.permission.WRITE_EXTERNAL_STORAGE},1);
                         }else {
                             openAlbum();
                         }
                         break;
-                    case R.id.takephotos:
+                    case R.id.takephotos://拍摄照片
                         //创建File对象，用于存储拍照后的图片,命名为outputimage.jpg,存放在SD卡应用关联缓存目录下
                         File outputImage = new File(getExternalCacheDir(),"output_image.jpg");
                         try {
@@ -176,6 +278,13 @@ public class ForeGroundActivity extends AppCompatActivity {
                         intent.putExtra(MediaStore.EXTRA_OUTPUT,imageUri);//指定照片的输出地址
                         startActivityForResult(intent,TAKE_PHOTO);
                         break;
+                    case R.id.drawphoto://手绘图形
+                        recyclerView.setVisibility(View.GONE);
+                        mSearchView.setVisibility(View.GONE);
+                        popButton.setVisibility(View.GONE);
+                        picture.setVisibility(View.VISIBLE);
+                        okButton.setVisibility(View.VISIBLE);
+                        quitButton.setVisibility(View.VISIBLE);
                     default:
                         break;
                 }
@@ -183,6 +292,46 @@ public class ForeGroundActivity extends AppCompatActivity {
             }
         });
 
+    }
+
+    //处理网络数据
+    private void parseJSONWithGSON(String jsonData){
+        Gson gson=new Gson();
+        try {
+            PhotoDraft photoDraft=gson.fromJson(jsonData,PhotoDraft.class);
+            Log.e(TAG,"抽象图:"+photoDraft);
+            result=photoDraft.getResult();
+            /*imageURL=new URL(result[0]);
+            imagePath=imageURL.getPath();*/
+            Log.e(TAG,0+"result[j]:"+result[0]);
+            Log.e(TAG,1+"result[j]:"+result[1]);
+            Log.e(TAG,2+"result[j]:"+result[2]);
+            upDatePic();
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+    //更新recyclerView中的图片
+    private void upDatePic(){
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                for (int i=0;i<result.length;i++){
+                    //Bitmap bitmap=BitmapFactory.decodeResource(ForeGroundActivity.this.getResources(), R.drawable.apple);
+                    String actualURL="http://10.108.125.20:8900/flaskr2/static/Imgs/"+result[i];
+                    Bitmap bitmap=HttpUtil.returnBitMap(actualURL);
+                    Pic pic=new Pic(bitmap);
+                    if (!picListEmpty){
+                        picList.remove(i);
+                    }
+                    picList.add(pic);
+                }
+                picListEmpty=false;
+                Message message=new Message();
+                message.what=UPDATE_BMP;
+                forehandler.sendMessage(message);
+            }
+        }).start();
     }
 
     @Override
@@ -235,12 +384,6 @@ public class ForeGroundActivity extends AppCompatActivity {
             case TAKE_PHOTO://将拍摄的照片显示出来
                 if (resultCode==RESULT_OK){
                     startPhotoZoom(imageUri);
-                    /*try {
-                        Bitmap bitmap= BitmapFactory.decodeStream(getContentResolver().openInputStream(imageUri));
-                        picture.setImageBitmap(bitmap);
-                    }catch (FileNotFoundException e){
-                        e.printStackTrace();
-                    }*/
                 }
                 break;
             case EMPTY_ESTIMATE://非空判断，防止重新剪裁时报错

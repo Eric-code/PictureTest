@@ -6,4 +6,7 @@
     <item
         android:id="@+id/takephotos"
         android:title="打开照相机"/>
+    <item
+        android:id="@+id/drawphoto"
+        android:title="手绘图形"/>
 </menu>

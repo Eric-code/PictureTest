@@ -172,7 +172,7 @@ public class BackGroundActivity extends AppCompatActivity{
                                 Log.e(TAG,"position:"+clickNum);
                                 Log.e(TAG,"result:"+BackGroundActivity.result[clickNum]);
                                 //把获得的图片保存到本地并将路径传输到主界面中
-                                File f = new File("/sdcard/"+"backpicture.bmp");
+                                File f = new File("/sdcard/"+"backpicture.png");
                                 if (f.exists()) {
                                     f.delete();
                                 }
@@ -254,8 +254,8 @@ public class BackGroundActivity extends AppCompatActivity{
         Gson gson=new Gson();
         try {
             Photo photo=gson.fromJson(jsonData,Photo.class);
-            Log.e(TAG,"原图:"+photo.getResult());
-            Log.e(TAG,"缩略图:"+photo.getResult1());
+            Log.e(TAG,"原图:");
+            Log.e(TAG,"缩略图:");
             result=photo.getResult();
             result1=photo.getResult1();
             imageURL=new URL(result1[0]);
@@ -263,21 +263,21 @@ public class BackGroundActivity extends AppCompatActivity{
             Log.e(TAG,0+"result[j]:"+result1[33]);
             Log.e(TAG,1+"result[j]:"+result1[1]);
             Log.e(TAG,2+"result[j]:"+result1[2]);
-            upDataePic();
+            upDatePic();
         }catch (Exception e){
             e.printStackTrace();
         }
     }
 
-    private void upDataePic(){
+    private void upDatePic(){
         new Thread(new Runnable() {
             @Override
             public void run() {
-                for (int i=0;i<10;i++){
+                for (int i=0;i<result1.length;i++){
                     //Bitmap bitmap=BitmapFactory.decodeResource(BackGroundActivity.this.getResources(), R.drawable.apple);
                     Bitmap bitmap=HttpUtil.returnBitMap(result1[i]);
                     Pic pic=new Pic(bitmap);
-                    picList.add(pic);
+                    picList.add(i,pic);
                 }
                 Message message=new Message();
                 message.what=UPDATE_BMP;

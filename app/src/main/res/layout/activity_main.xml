@@ -33,7 +33,7 @@
                     android:layout_height="match_parent"
                     android:layout_gravity="center_horizontal"
                     android:layout_alignParentTop="true"
-                    android:src="@drawable/nav_icon"/>
+                    android:src="@drawable/init"/>
                 <ImageView
                     android:id="@+id/fore_picture"
                     android:layout_width="wrap_content"

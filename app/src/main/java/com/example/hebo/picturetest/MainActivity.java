@@ -233,7 +233,8 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
                 break;
             case R.id.save:
                 saveBitmap(back_picture,"mixpic");
-                Toast.makeText(this,"save",Toast.LENGTH_SHORT).show();
+                Toast.makeText(this,"保存图片:"+Environment.getExternalStorageDirectory(),Toast.LENGTH_SHORT).show();
+                Log.e(TAG, "保存图片:"+Environment.getExternalStorageDirectory());
                 break;
             default:
         }
@@ -274,8 +275,8 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
         Bitmap bm = Bitmap.createBitmap(v.getWidth(), v.getHeight(), Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(bm);
         v.draw(canvas);
-        Log.e(TAG, "保存图片");
-        File f = new File(Environment.getExternalStorageDirectory(), System.currentTimeMillis() + ".jpg");
+        File f = new File(Environment.getExternalStorageDirectory(), name + ".png");
+        //File f = new File("/sdcard/DCIM/",fileName);
         if (f.exists()) {
             f.delete();
         }
