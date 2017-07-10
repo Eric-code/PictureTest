@@ -31,7 +31,7 @@
                 android:resource="@xml/file_paths" />
         </provider>
 
-        <activity android:name=".ForeGroundActivity"></activity>
+        <activity android:name=".ForeGroundActivity"/>
     </application>
 
 </manifest>

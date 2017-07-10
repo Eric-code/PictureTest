@@ -136,6 +136,7 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
             public void onClick(View v) {
                 if (fore_picture_item_num>0){
                     navigationView.getMenu().removeItem(R.id.foregroundpicture+fore_picture_item_num);
+                    imageViews[fore_picture_item_num].setWillNotDraw(true);
                     fore_picture_item_num--;
                    // Toast.makeText(MainActivity.this,"删除前景+"+fore_picture_num,Toast.LENGTH_SHORT).show();
                 }
@@ -170,16 +171,16 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
                         imagePath=ForeGroundActivity.bmpPath;
                         Bitmap bitmap2=BitmapFactory.decodeFile(imagePath);
                         //fore_picture.setImageBitmap(bitmap2);
-                        ImageView mImageView = new ImageView(MainActivity.this);
-                        imageViews[fore_picture_num]=mImageView;
+                        //ImageView mImageView = new ImageView(MainActivity.this);
+                        //imageViews[fore_picture_num]=mImageView;
                         //设置图片长度高度
-                        mImageView.setLayoutParams(new DrawerLayout.LayoutParams(DrawerLayout.LayoutParams.WRAP_CONTENT, DrawerLayout.LayoutParams.WRAP_CONTENT));
-                        mImageView.setImageBitmap(bitmap2);
-                        mImageView.setWillNotDraw(false);
-                        mImageView.setOnTouchListener(MainActivity.this);
+                        imageViews[fore_picture_num].setLayoutParams(new DrawerLayout.LayoutParams(DrawerLayout.LayoutParams.WRAP_CONTENT, DrawerLayout.LayoutParams.WRAP_CONTENT));
+                        imageViews[fore_picture_num].setImageBitmap(bitmap2);
+                        imageViews[fore_picture_num].setWillNotDraw(false);
+                        imageViews[fore_picture_num].setOnTouchListener(MainActivity.this);
                         if (fore_picture_num<10){
                             fore_picture_num++;
-                            r.addView(mImageView);
+                            r.addView(imageViews[fore_picture_num]);
                         }
                         Log.e(TAG,"消息收到+");
                         break;
@@ -196,8 +197,6 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
             }
         };
     }
-
-
 
     //toolbar菜单命令
     public boolean onCreateOptionsMenu(Menu menu){

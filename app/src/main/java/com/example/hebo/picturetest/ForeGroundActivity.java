@@ -88,15 +88,14 @@ public class ForeGroundActivity extends AppCompatActivity {
     private RecyclerView recyclerView;
     private Button popButton;
     private FloatingActionButton okButton,quitButton;
-    public static Uri imageUri;
-    public static String imagePath;
+    public static Uri imageUri,imageUri1;
+    public static String imagePath,imagePath1;
     public static URL imageURL;
     private Bitmap baseBitmap;
     private Canvas canvas;
     private Paint paint;
     private boolean canvasEmpty=true;
     private boolean picListEmpty=true;
-    private int floatBtnUse=0;
 
 
     @Override
@@ -106,7 +105,7 @@ public class ForeGroundActivity extends AppCompatActivity {
 
         picture=(ImageView)findViewById(R.id.picture1);
 
-        picture.setVisibility(View.GONE);
+        //picture.setVisibility(View.GONE);
 
         recyclerView=(RecyclerView)findViewById(R.id.recycler_view1);
         popButton=(Button)findViewById(R.id.popupmenu_btn1);
@@ -142,49 +141,7 @@ public class ForeGroundActivity extends AppCompatActivity {
             }
         });
 
-        // 创建一张空白图片
-        baseBitmap = Bitmap.createBitmap(720, 1000, Bitmap.Config.ARGB_8888);
-        // 创建一张画布
-        canvas = new Canvas(baseBitmap);
-        // 画布背景为白色
-        canvas.drawColor(Color.rgb(245,245,245));
-        // 创建画笔
-        paint = new Paint();
-        // 画笔颜色为黑色
-        paint.setColor(Color.BLACK);
-        // 宽度5个像素
-        paint.setStrokeWidth(5);
-        // 先将白色背景画上
-        canvas.drawColor(Color.rgb(245,245,245),PorterDuff.Mode.CLEAR);
-        canvas.drawBitmap(baseBitmap, new Matrix(), paint);
-        picture.setImageBitmap(baseBitmap);
-        picture.setOnTouchListener(new View.OnTouchListener() {
-            int startX;
-            int startY;
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                switch (event.getAction()) {
-                    case MotionEvent.ACTION_DOWN:
-                        // 获取手按下时的坐标
-                        startX = (int) event.getX();
-                        startY = (int) event.getY();
-                        break;
-                    case MotionEvent.ACTION_MOVE:
-                        // 获取手移动后的坐标
-                        int stopX = (int) event.getX();
-                        int stopY = (int) event.getY();
-                        // 在开始和结束坐标间画一条线
-                        canvas.drawLine(startX, startY, stopX, stopY, paint);
-                        canvasEmpty=false;
-                        // 实时更新开始坐标
-                        startX = (int) event.getX();
-                        startY = (int) event.getY();
-                        picture.setImageBitmap(baseBitmap);
-                        break;
-                    }
-                return true;
-            }
-        });
+
         //悬浮按钮ok
         okButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -260,6 +217,12 @@ public class ForeGroundActivity extends AppCompatActivity {
             public boolean onMenuItemClick(MenuItem item) {
                 switch (item.getItemId()) {
                     case R.id.choose_from_album://从相册中选择照片
+                        recyclerView.setVisibility(View.GONE);
+                        mSearchView.setVisibility(View.GONE);
+                        popButton.setVisibility(View.GONE);
+                        picture.setVisibility(View.VISIBLE);
+                        okButton.setVisibility(View.GONE);
+                        quitButton.setVisibility(View.GONE);
                         if (ContextCompat.checkSelfPermission(ForeGroundActivity.this, android.Manifest.permission.WRITE_EXTERNAL_STORAGE)!= PackageManager.PERMISSION_GRANTED){
                             ActivityCompat.requestPermissions(ForeGroundActivity.this,new String[]{android.Manifest.permission.WRITE_EXTERNAL_STORAGE},1);
                         }else {
@@ -270,9 +233,9 @@ public class ForeGroundActivity extends AppCompatActivity {
                         recyclerView.setVisibility(View.GONE);
                         mSearchView.setVisibility(View.GONE);
                         popButton.setVisibility(View.GONE);
-                        picture.setVisibility(View.GONE);
-                        okButton.setVisibility(View.VISIBLE);
-                        quitButton.setVisibility(View.VISIBLE);
+                        picture.setVisibility(View.VISIBLE);
+                        okButton.setVisibility(View.GONE);
+                        quitButton.setVisibility(View.GONE);
                         //创建File对象，用于存储拍照后的图片,命名为outputimage.jpg,存放在SD卡应用关联缓存目录下
                         File outputImage = new File(getExternalCacheDir(),"output_image.jpg");
                         try {
@@ -300,6 +263,49 @@ public class ForeGroundActivity extends AppCompatActivity {
                         picture.setVisibility(View.VISIBLE);
                         okButton.setVisibility(View.VISIBLE);
                         quitButton.setVisibility(View.VISIBLE);
+                        // 创建一张空白图片
+                        baseBitmap = Bitmap.createBitmap(720, 1000, Bitmap.Config.ARGB_8888);
+                        // 创建一张画布
+                        canvas = new Canvas(baseBitmap);
+                        // 画布背景为白色
+                        canvas.drawColor(Color.rgb(245,245,245));
+                        // 创建画笔
+                        paint = new Paint();
+                        // 画笔颜色为黑色
+                        paint.setColor(Color.BLACK);
+                        // 宽度5个像素
+                        paint.setStrokeWidth(5);
+                        // 先将白色背景画上
+                        canvas.drawColor(Color.rgb(245,245,245),PorterDuff.Mode.CLEAR);
+                        canvas.drawBitmap(baseBitmap, new Matrix(), paint);
+                        picture.setImageBitmap(baseBitmap);
+                        picture.setOnTouchListener(new View.OnTouchListener() {
+                            int startX;
+                            int startY;
+                            @Override
+                            public boolean onTouch(View v, MotionEvent event) {
+                                switch (event.getAction()) {
+                                    case MotionEvent.ACTION_DOWN:
+                                        // 获取手按下时的坐标
+                                        startX = (int) event.getX();
+                                        startY = (int) event.getY();
+                                        break;
+                                    case MotionEvent.ACTION_MOVE:
+                                        // 获取手移动后的坐标
+                                        int stopX = (int) event.getX();
+                                        int stopY = (int) event.getY();
+                                        // 在开始和结束坐标间画一条线
+                                        canvas.drawLine(startX, startY, stopX, stopY, paint);
+                                        canvasEmpty=false;
+                                        // 实时更新开始坐标
+                                        startX = (int) event.getX();
+                                        startY = (int) event.getY();
+                                        picture.setImageBitmap(baseBitmap);
+                                        break;
+                                }
+                                return true;
+                            }
+                        });
                     default:
                         break;
                 }
@@ -398,13 +404,30 @@ public class ForeGroundActivity extends AppCompatActivity {
                 }
                 break;
             case TAKE_PHOTO://将拍摄的照片显示出来
-                    if (resultCode==RESULT_OK){
-                    startPhotoZoom(imageUri);
+                if (resultCode==RESULT_OK){
+                     //startPhotoZoom(imageUri);
+                    /*try {
+                        Bitmap bitmap = BitmapFactory.decodeStream(getContentResolver().openInputStream(imageUri));
+                        picture.setImageBitmap(bitmap);
+                    } catch (FileNotFoundException e) {
+                        e.printStackTrace();
+                    }*/
+                    //不知道下面这个try...catch...起到了什么作用，但是一删掉主界面就无法显示拍摄的照片
+                    try {
+                        Bitmap bitmap= BitmapFactory.decodeStream(getContentResolver().openInputStream(imageUri));
+                        //picture.setImageBitmap(bitmap);
+                    }catch (FileNotFoundException e){
+                        e.printStackTrace();
+                    }
+                    imagePath=imageUri.getPath();//将图片信息的uri转换成路径
+                    Bitmap bitmap1=BitmapFactory.decodeFile(imagePath);
+                    picture.setImageBitmap(bitmap1);
+                    //picture.setImageResource(R.drawable.apple);
                 }
                 break;
             case EMPTY_ESTIMATE://非空判断，防止重新剪裁时报错
                 if (data!=null){
-                    setPicToView(data);
+                    //setPicToView(data);
                 }
                 break;
             default:
@@ -434,8 +457,8 @@ public class ForeGroundActivity extends AppCompatActivity {
             //如果是file类型的Uri，直接获取图片路径即可
             imagePath=uri.getPath();
         }
-        cropPic(imagePath);
-        //displayImage(imagePath);//根据图片路径显示图片
+        //cropPic(imagePath);
+        displayImage(imagePath);//根据图片路径显示图片
     }
     //获取图库中图片的路径
     private String getImagePath(Uri uri,String selection){
@@ -460,18 +483,39 @@ public class ForeGroundActivity extends AppCompatActivity {
         }
     }
 
-    //剪裁图片方法实现
+    private void picSave(Bitmap bitmap){
+        Log.e(TAG, "保存图片");
+        File f = new File(getExternalCacheDir(), "forepicture.bmp");
+        if (f.exists()) {
+            f.delete();
+        }
+        try {
+            FileOutputStream out = new FileOutputStream(f);
+            bitmap.compress(Bitmap.CompressFormat.PNG, 90, out);
+            out.flush();
+            out.close();
+            Log.i(TAG, "已经保存");
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        Uri uri=Uri.fromFile(f);
+        bmpPath=uri.getPath();
+    }
+
+    /*//剪裁图片方法实现
     public void startPhotoZoom(Uri uri) {
         Intent intent = new Intent("com.android.camera.action.CROP");
-        intent.setDataAndType(uri, "image/*");
+        intent.setDataAndType(uri, "image*//*");
         //下面这个crop=true是设置在开启的Intent中设置显示的VIEW可裁剪
         intent.putExtra("crop", "true");
         // aspectX aspectY 是宽高的比例
         intent.putExtra("aspectX", 0);
         intent.putExtra("aspectY", 0);
         // outputX outputY 是裁剪图片宽高
-        /*intent.putExtra("outputX", 150);
-        intent.putExtra("outputY", 150);*/
+        *//*intent.putExtra("outputX", 150);
+        intent.putExtra("outputY", 150);*//*
         intent.putExtra("return-data", true);
         intent.putExtra("scale", true);
         startActivityForResult(intent, 3);
@@ -498,44 +542,25 @@ public class ForeGroundActivity extends AppCompatActivity {
         }
     }
 
-    private void picSave(Bitmap bitmap){
-        Log.e(TAG, "保存图片");
-        File f = new File(getExternalCacheDir(), "forepicture.bmp");
-        if (f.exists()) {
-            f.delete();
-        }
-        try {
-            FileOutputStream out = new FileOutputStream(f);
-            bitmap.compress(Bitmap.CompressFormat.PNG, 90, out);
-            out.flush();
-            out.close();
-            Log.i(TAG, "已经保存");
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        Uri uri=Uri.fromFile(f);
-        bmpPath=uri.getPath();
-    }
+
 
     private void cropPic(String imagePath) {
         File file = new File(imagePath);
         Intent intent = new Intent("com.android.camera.action.CROP");
-        /*if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+        *//*if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
             Uri contentUri = FileProvider.getUriForFile(this, "com.leon.crop.fileprovider", file);
-            intent.setDataAndType(contentUri, "image*//*");
+            intent.setDataAndType(contentUri, "image*//**//*");
         } else {
-        }*/
-        intent.setDataAndType(Uri.fromFile(file), "image/*");
+        }*//*
+        intent.setDataAndType(Uri.fromFile(file), "image*//*");
         intent.putExtra("crop", "true");
         intent.putExtra("aspectX", 0);//若均为1则无法任意改变矩阵长宽比
         intent.putExtra("aspectY", 0);
-/*        intent.putExtra("outputX", 150);
-        intent.putExtra("outputY", 150);*/
+*//*        intent.putExtra("outputX", 150);
+        intent.putExtra("outputY", 150);*//*
         intent.putExtra("return-data", true);
         intent.putExtra("scale", true);
         startActivityForResult(intent, 3);
-    }
+    }*/
 }
