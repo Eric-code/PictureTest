@@ -98,17 +98,11 @@ public class ForeGroundActivity extends AppCompatActivity {
     private boolean picListEmpty=true;
     private int floatBtnUse=0;
 
-    CropImageView mCropView;
-    LoadCallback loadCallback;
-    SaveCallback saveCallback;
-    CropCallback cropCallback;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_fore_ground);
-
-        mCropView = (CropImageView) findViewById(R.id.cropImageView);
 
         picture=(ImageView)findViewById(R.id.picture1);
 
@@ -195,41 +189,30 @@ public class ForeGroundActivity extends AppCompatActivity {
         okButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                switch (floatBtnUse){
-                    case 2://拍摄照片时确认裁剪效果
-                        mCropView.startCrop(imageUri,cropCallback,saveCallback);
-                        Log.e(TAG,"图片保存成功");
-                        break;
-                    case 3://采用画板时发送图片信息给服务器
-                        if (!canvasEmpty){
-                            picSave(baseBitmap);
-                            String base64String=ImageUtil.bitmapToString(bmpPath);
-                            Log.e(TAG,"press"+base64String);
-                            //发送网络请求
-                            RequestBody requestBody=new FormBody.Builder()
-                                    .add("value",base64String)//提交的请求
-                                    .build();
-                            HttpUtil.sendOkHttpRequest("http://10.108.125.20:8900/flaskr2/draftAndroid",requestBody,new Callback(){
-                                //得到服务器返回的具体内容
-                                @Override
-                                public void onResponse(Call call, Response response) throws IOException {
-                                    String responseData=response.body().string();
-                                    parseJSONWithGSON(responseData);
-                                }
-                                //对异常情况进行处理
-                                @Override
-                                public void onFailure(Call call, IOException e) {
-                                    //Toast.makeText(BackGroundActivity.this, "图片加载失败", Toast.LENGTH_SHORT).show();
-                                }
-                            });
-                        }else {
-                            Toast.makeText(ForeGroundActivity.this, "手绘图片为空", Toast.LENGTH_SHORT).show();
+                if (!canvasEmpty){
+                    picSave(baseBitmap);
+                    String base64String=ImageUtil.bitmapToString(bmpPath);
+                    Log.e(TAG,"press"+base64String);
+                    //发送网络请求
+                    RequestBody requestBody=new FormBody.Builder()
+                            .add("value",base64String)//提交的请求
+                            .build();
+                    HttpUtil.sendOkHttpRequest("http://10.108.125.20:8900/flaskr2/draftAndroid",requestBody,new Callback(){
+                        //得到服务器返回的具体内容
+                        @Override
+                        public void onResponse(Call call, Response response) throws IOException {
+                            String responseData=response.body().string();
+                            parseJSONWithGSON(responseData);
                         }
-                        break;
-                    default:
-                        break;
+                        //对异常情况进行处理
+                        @Override
+                        public void onFailure(Call call, IOException e) {
+                            //Toast.makeText(BackGroundActivity.this, "图片加载失败", Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                }else {
+                    Toast.makeText(ForeGroundActivity.this, "手绘图片为空", Toast.LENGTH_SHORT).show();
                 }
-
             }
         });
         //悬浮按钮，清除画布
@@ -284,11 +267,9 @@ public class ForeGroundActivity extends AppCompatActivity {
                         }
                         break;
                     case R.id.takephotos://拍摄照片
-                        floatBtnUse=2;//设置悬浮按钮作用于拍摄照片的裁剪
                         recyclerView.setVisibility(View.GONE);
                         mSearchView.setVisibility(View.GONE);
                         popButton.setVisibility(View.GONE);
-                        mCropView.setVisibility(View.VISIBLE);
                         picture.setVisibility(View.GONE);
                         okButton.setVisibility(View.VISIBLE);
                         quitButton.setVisibility(View.VISIBLE);
@@ -313,11 +294,9 @@ public class ForeGroundActivity extends AppCompatActivity {
                         startActivityForResult(intent,TAKE_PHOTO);
                         break;
                     case R.id.drawphoto://手绘图形
-                        floatBtnUse=3;//设置悬浮按钮作用于手绘图形的确认与清除
                         recyclerView.setVisibility(View.GONE);
                         mSearchView.setVisibility(View.GONE);
                         popButton.setVisibility(View.GONE);
-                        //mCropView.setVisibility(View.GONE);
                         picture.setVisibility(View.VISIBLE);
                         okButton.setVisibility(View.VISIBLE);
                         quitButton.setVisibility(View.VISIBLE);
@@ -419,44 +398,8 @@ public class ForeGroundActivity extends AppCompatActivity {
                 }
                 break;
             case TAKE_PHOTO://将拍摄的照片显示出来
-                cropCallback=new CropCallback() {
-                    @Override
-                    public void onSuccess(Bitmap cropped) {
-
-                    }
-                    @Override
-                    public void onError() {}
-                };
-                saveCallback=new SaveCallback() {
-                    @Override
-                    public void onSuccess(Uri outputUri) {
-                        bmpPath=imageUri.getPath();
-                        new Thread(new Runnable() {
-                            @Override
-                            public void run() {
-                                Message message=new Message();
-                                message.what=CROP_PHOTO_MSG;
-                                forehandler=MainActivity.revHandler;
-                                forehandler.sendMessage(message);
-                            }
-                        }).start();
-                        finish();//结束本活动，就直接显示主界面
-                    }
-                    @Override
-                    public void onError() {}
-                };
-                loadCallback=new LoadCallback() {
-                    @Override
-                    public void onSuccess() {
-                    }
-                    @Override
-                    public void onError() {
-                    }
-                };
                     if (resultCode==RESULT_OK){
-                    //startPhotoZoom(imageUri);
-                    mCropView.startLoad(imageUri,loadCallback);
-                    Log.e(TAG,"图片load成功");
+                    startPhotoZoom(imageUri);
                 }
                 break;
             case EMPTY_ESTIMATE://非空判断，防止重新剪裁时报错
@@ -524,13 +467,13 @@ public class ForeGroundActivity extends AppCompatActivity {
         //下面这个crop=true是设置在开启的Intent中设置显示的VIEW可裁剪
         intent.putExtra("crop", "true");
         // aspectX aspectY 是宽高的比例
-        intent.putExtra("aspectX", 0.1);
-        intent.putExtra("aspectY", 0.1);
+        intent.putExtra("aspectX", 0);
+        intent.putExtra("aspectY", 0);
         // outputX outputY 是裁剪图片宽高
-        intent.putExtra("outputX", 150);
-        intent.putExtra("outputY", 150);
+        /*intent.putExtra("outputX", 150);
+        intent.putExtra("outputY", 150);*/
         intent.putExtra("return-data", true);
-        intent.putExtra("scale", false);
+        intent.putExtra("scale", true);
         startActivityForResult(intent, 3);
     }
 
@@ -539,6 +482,7 @@ public class ForeGroundActivity extends AppCompatActivity {
         Bundle extras = picdata.getExtras();
         if (extras != null) {
             Bitmap photo = extras.getParcelable("data");
+            Log.e(TAG,"保存宽度："+photo.getWidth()+"+保存高度："+photo.getHeight());
             picture.setImageBitmap(photo);
             picSave(photo);
             new Thread(new Runnable() {
@@ -586,10 +530,10 @@ public class ForeGroundActivity extends AppCompatActivity {
         }*/
         intent.setDataAndType(Uri.fromFile(file), "image/*");
         intent.putExtra("crop", "true");
-        intent.putExtra("aspectX", 0.1);//若均为1则无法任意改变矩阵长宽比
-        intent.putExtra("aspectY", 0.1);
-        intent.putExtra("outputX", 150);
-        intent.putExtra("outputY", 150);
+        intent.putExtra("aspectX", 0);//若均为1则无法任意改变矩阵长宽比
+        intent.putExtra("aspectY", 0);
+/*        intent.putExtra("outputX", 150);
+        intent.putExtra("outputY", 150);*/
         intent.putExtra("return-data", true);
         intent.putExtra("scale", true);
         startActivityForResult(intent, 3);
