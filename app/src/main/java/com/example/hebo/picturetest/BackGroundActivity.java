@@ -7,7 +7,6 @@ import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
-import android.nfc.Tag;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Message;
@@ -16,7 +15,6 @@ import android.provider.MediaStore;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.FileProvider;
-import android.support.v4.view.GravityCompat;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -32,9 +30,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
 import android.widget.ImageView;
-import android.widget.ListView;
 import android.widget.Toast;
 
 import com.example.hebo.picturetest.JSON.HttpUtil;
@@ -47,11 +43,9 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -60,7 +54,7 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 
 
-public class BackGroundActivity extends AppCompatActivity{
+public class BackGroundActivity extends AppCompatActivity implements PhotoCropView.onLocationListener{
     private List<Pic> picList=new ArrayList<>();
 
     private SearchView mSearchView;
@@ -100,6 +94,11 @@ public class BackGroundActivity extends AppCompatActivity{
         if (actionBar!=null){
             actionBar.setDisplayHomeAsUpEnabled(true);
         }
+
+        PhotoCropView mCropView = (PhotoCropView)findViewById(R.id.test);
+        mCropView.setLocationListener(this);
+        ImageView imageView=(ImageView)findViewById(R.id.back_iamge);
+        imageView.setImageResource(R.drawable.nav_icon);
 
         //搜索框下部检索提示信息显示
         //mListView=(ListView)findViewById(R.id.listView);
@@ -150,6 +149,7 @@ public class BackGroundActivity extends AppCompatActivity{
                 return false;
             }
         });
+
 
         //瀑布流列表的实现
         handler=new Handler(){
@@ -246,6 +246,11 @@ public class BackGroundActivity extends AppCompatActivity{
                 return false;
             }
         });
+    }
+
+    @Override
+    public void locationRect(int startX, int startY, int endX, int endY){
+        Log.e(TAG,"[ "+startX+"--"+startY+"--"+endX+"--"+endY+" ]");
     }
 
     //处理网络数据
