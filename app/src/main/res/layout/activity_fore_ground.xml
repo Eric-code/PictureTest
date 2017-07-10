@@ -32,18 +32,26 @@
             android:onClick="popupmenu"
             android:layout_weight="1"/>
     </LinearLayout>
-
-    <ImageView
-        android:id="@+id/picture1"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal" />
-
-    <android.support.v7.widget.RecyclerView
-        android:id="@+id/recycler_view1"
+    <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:visibility="gone"/>
+        android:layout_height="1000px">
+
+        <ImageView
+            android:id="@+id/picture1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal" />
+        <com.example.hebo.picturetest.PhotoCropView
+            android:id="@+id/crop"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/recycler_view1"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="gone"/>
+
+    </RelativeLayout>
 
     <RelativeLayout
         android:layout_width="match_parent"

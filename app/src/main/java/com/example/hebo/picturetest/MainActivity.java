@@ -252,8 +252,7 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
                 int top = v.getTop() + dy;
                 int right = v.getRight() + dx;
                 int bottom = v.getBottom() + dy;
-                Log.i("life", " left = " + left + "  v.getLeft=" + v.getLeft()
-                        + " ; event.getRawX = " + event.getRawX() + " ; lastX = "
+                Log.i("life", " left = " + left + "  v.getLeft=" + v.getLeft() + " ; event.getRawX = " + event.getRawX() + " ; lastX = "
                         + lastX + " dx = " + dx);
                 v.layout(left, top, right, bottom);
                 lastX = (int) event.getRawX();
@@ -266,7 +265,7 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
     }
 
     //保存View为图片的方法
-    public void saveBitmap(View v, String name) {
+    public static void saveBitmap(View v, String name) {
         String fileName = name + ".png";
         Bitmap bm = Bitmap.createBitmap(v.getWidth(), v.getHeight(), Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(bm);

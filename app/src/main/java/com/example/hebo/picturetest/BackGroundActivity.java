@@ -248,6 +248,7 @@ public class BackGroundActivity extends AppCompatActivity implements PhotoCropVi
         });
     }
 
+    //重写位置监听器中的方法
     @Override
     public void locationRect(int startX, int startY, int endX, int endY){
         Log.e(TAG,"[ "+startX+"--"+startY+"--"+endX+"--"+endY+" ]");

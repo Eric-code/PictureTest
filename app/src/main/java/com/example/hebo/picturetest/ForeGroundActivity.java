@@ -69,7 +69,7 @@ import okhttp3.FormBody;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
-public class ForeGroundActivity extends AppCompatActivity {
+public class ForeGroundActivity extends AppCompatActivity implements PhotoCropView.onLocationListener{
     private List<Pic> picList=new ArrayList<>();
     private SearchView mSearchView;
     PopupMenu popupMenu;
@@ -94,8 +94,11 @@ public class ForeGroundActivity extends AppCompatActivity {
     private Bitmap baseBitmap;
     private Canvas canvas;
     private Paint paint;
+    private PhotoCropView mCropView;
     private boolean canvasEmpty=true;
     private boolean picListEmpty=true;
+    private boolean floatingbtn=true;//ture表示用来发送截图，flase表示用来发送手绘图
+    private int sX,sY,eX,eY,coverWidth,coverHeight;
 
 
     @Override
@@ -103,6 +106,9 @@ public class ForeGroundActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_fore_ground);
 
+        mCropView = (PhotoCropView)findViewById(R.id.crop);
+        mCropView.setLocationListener(this);
+        mCropView.setVisibility(View.INVISIBLE);
         picture=(ImageView)findViewById(R.id.picture1);
 
         //picture.setVisibility(View.GONE);
@@ -146,29 +152,33 @@ public class ForeGroundActivity extends AppCompatActivity {
         okButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (!canvasEmpty){
-                    picSave(baseBitmap);
-                    String base64String=ImageUtil.bitmapToString(bmpPath);
-                    Log.e(TAG,"press"+base64String);
-                    //发送网络请求
-                    RequestBody requestBody=new FormBody.Builder()
-                            .add("value",base64String)//提交的请求
-                            .build();
-                    HttpUtil.sendOkHttpRequest("http://10.108.125.20:8900/flaskr2/draftAndroid",requestBody,new Callback(){
-                        //得到服务器返回的具体内容
-                        @Override
-                        public void onResponse(Call call, Response response) throws IOException {
-                            String responseData=response.body().string();
-                            parseJSONWithGSON(responseData);
-                        }
-                        //对异常情况进行处理
-                        @Override
-                        public void onFailure(Call call, IOException e) {
-                            //Toast.makeText(BackGroundActivity.this, "图片加载失败", Toast.LENGTH_SHORT).show();
-                        }
-                    });
+                if (floatingbtn){
+                    MainActivity.saveBitmap(picture,"foreback");
                 }else {
-                    Toast.makeText(ForeGroundActivity.this, "手绘图片为空", Toast.LENGTH_SHORT).show();
+                    if (!canvasEmpty){
+                        picSave(baseBitmap);
+                        String base64String=ImageUtil.bitmapToString(bmpPath);
+                        Log.e(TAG,"press"+base64String);
+                        //发送网络请求
+                        RequestBody requestBody=new FormBody.Builder()
+                                .add("value",base64String)//提交的请求
+                                .build();
+                        HttpUtil.sendOkHttpRequest("http://10.108.125.20:8900/flaskr2/draftAndroid",requestBody,new Callback(){
+                            //得到服务器返回的具体内容
+                            @Override
+                            public void onResponse(Call call, Response response) throws IOException {
+                                String responseData=response.body().string();
+                                parseJSONWithGSON(responseData);
+                            }
+                            //对异常情况进行处理
+                            @Override
+                            public void onFailure(Call call, IOException e) {
+                                //Toast.makeText(BackGroundActivity.this, "图片加载失败", Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                    }else {
+                        Toast.makeText(ForeGroundActivity.this, "手绘图片为空", Toast.LENGTH_SHORT).show();
+                    }
                 }
             }
         });
@@ -217,12 +227,13 @@ public class ForeGroundActivity extends AppCompatActivity {
             public boolean onMenuItemClick(MenuItem item) {
                 switch (item.getItemId()) {
                     case R.id.choose_from_album://从相册中选择照片
+                        floatingbtn=true;
                         recyclerView.setVisibility(View.GONE);
                         mSearchView.setVisibility(View.GONE);
                         popButton.setVisibility(View.GONE);
                         picture.setVisibility(View.VISIBLE);
-                        okButton.setVisibility(View.GONE);
-                        quitButton.setVisibility(View.GONE);
+                        okButton.setVisibility(View.VISIBLE);
+                        quitButton.setVisibility(View.VISIBLE);
                         if (ContextCompat.checkSelfPermission(ForeGroundActivity.this, android.Manifest.permission.WRITE_EXTERNAL_STORAGE)!= PackageManager.PERMISSION_GRANTED){
                             ActivityCompat.requestPermissions(ForeGroundActivity.this,new String[]{android.Manifest.permission.WRITE_EXTERNAL_STORAGE},1);
                         }else {
@@ -230,12 +241,13 @@ public class ForeGroundActivity extends AppCompatActivity {
                         }
                         break;
                     case R.id.takephotos://拍摄照片
+                        floatingbtn=true;
                         recyclerView.setVisibility(View.GONE);
                         mSearchView.setVisibility(View.GONE);
                         popButton.setVisibility(View.GONE);
                         picture.setVisibility(View.VISIBLE);
-                        okButton.setVisibility(View.GONE);
-                        quitButton.setVisibility(View.GONE);
+                        okButton.setVisibility(View.VISIBLE);
+                        quitButton.setVisibility(View.VISIBLE);
                         //创建File对象，用于存储拍照后的图片,命名为outputimage.jpg,存放在SD卡应用关联缓存目录下
                         File outputImage = new File(getExternalCacheDir(),"output_image.jpg");
                         try {
@@ -257,6 +269,7 @@ public class ForeGroundActivity extends AppCompatActivity {
                         startActivityForResult(intent,TAKE_PHOTO);
                         break;
                     case R.id.drawphoto://手绘图形
+                        floatingbtn=false;
                         recyclerView.setVisibility(View.GONE);
                         mSearchView.setVisibility(View.GONE);
                         popButton.setVisibility(View.GONE);
@@ -267,8 +280,8 @@ public class ForeGroundActivity extends AppCompatActivity {
                         baseBitmap = Bitmap.createBitmap(720, 1000, Bitmap.Config.ARGB_8888);
                         // 创建一张画布
                         canvas = new Canvas(baseBitmap);
-                        // 画布背景为白色
-                        canvas.drawColor(Color.rgb(245,245,245));
+                        // 画布背景
+                        canvas.drawColor(Color.rgb(190,190,190));
                         // 创建画笔
                         paint = new Paint();
                         // 画笔颜色为黑色
@@ -276,7 +289,7 @@ public class ForeGroundActivity extends AppCompatActivity {
                         // 宽度5个像素
                         paint.setStrokeWidth(5);
                         // 先将白色背景画上
-                        canvas.drawColor(Color.rgb(245,245,245),PorterDuff.Mode.CLEAR);
+                        canvas.drawColor(Color.rgb(190,190,190),PorterDuff.Mode.CLEAR);
                         canvas.drawBitmap(baseBitmap, new Matrix(), paint);
                         picture.setImageBitmap(baseBitmap);
                         picture.setOnTouchListener(new View.OnTouchListener() {
@@ -312,7 +325,18 @@ public class ForeGroundActivity extends AppCompatActivity {
                 return false;
             }
         });
+    }
 
+    //重写位置监听器中的方法
+    @Override
+    public void locationRect(int startX, int startY, int endX, int endY){
+        Log.e(TAG,"[ "+startX+"--"+startY+"--"+endX+"--"+endY+" ]");
+        sX=startX;
+        sY=startY;
+        eX=endX;
+        eY=endY;
+        coverWidth=endX-sX;
+        coverHeight=endY-sY;
     }
 
     //处理网络数据
@@ -400,6 +424,9 @@ public class ForeGroundActivity extends AppCompatActivity {
             case CHOOSE_PHOTO://对图库中选择的图片进行处理
                 if (resultCode==RESULT_OK){
                     handleImageOnKitkat(data);
+                    mCropView.setVisibility(View.VISIBLE);
+                    okButton.setVisibility(View.VISIBLE);
+                    quitButton.setVisibility(View.VISIBLE);
                     //startPhotoZoom(data.getData());
                 }
                 break;
@@ -422,6 +449,9 @@ public class ForeGroundActivity extends AppCompatActivity {
                     imagePath=imageUri.getPath();//将图片信息的uri转换成路径
                     Bitmap bitmap1=BitmapFactory.decodeFile(imagePath);
                     picture.setImageBitmap(bitmap1);
+                    mCropView.setVisibility(View.VISIBLE);
+                    okButton.setVisibility(View.VISIBLE);
+                    quitButton.setVisibility(View.VISIBLE);
                     //picture.setImageResource(R.drawable.apple);
                 }
                 break;
