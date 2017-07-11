@@ -12,8 +12,6 @@ import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.PorterDuff;
-import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Handler;
@@ -52,10 +50,6 @@ import com.example.hebo.picturetest.image.ImageUtil;
 import com.example.hebo.picturetest.recyclerView.Pic;
 import com.example.hebo.picturetest.recyclerView.PicAdapter;
 import com.google.gson.Gson;
-import com.isseiaoki.simplecropview.CropImageView;
-import com.isseiaoki.simplecropview.callback.CropCallback;
-import com.isseiaoki.simplecropview.callback.LoadCallback;
-import com.isseiaoki.simplecropview.callback.SaveCallback;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -72,11 +66,11 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 
 public class ForeGroundActivity extends AppCompatActivity implements PhotoCropView.onLocationListener{
-    private List<Pic> picList=new ArrayList<>();
-    private SearchView mSearchView;
-    PopupMenu popupMenu;
-    Menu menu;
-    private static final String TAG = "ForeGroundActivity";
+    public List<Pic> picList=new ArrayList<>();
+    public SearchView mSearchView;
+    public PopupMenu popupMenu;
+    public Menu menu;
+    public static final String TAG = "ForeGroundActivity";
     public static final int TAKE_PHOTO=1;//照相
     public static final int CHOOSE_PHOTO=2;//图库中选择照片
     public static final int EMPTY_ESTIMATE=3;//图片非空判断，防止重新剪裁时报错
@@ -86,26 +80,26 @@ public class ForeGroundActivity extends AppCompatActivity implements PhotoCropVi
     public static String bmpPath=null;
     public static String[] result;
     public static String resultString;
-    private Handler forehandler=new Handler();
-    private ImageView picture;
-    private RecyclerView recyclerView;
-    private Button popButton;
-    private FloatingActionButton okButton,quitButton;
+    public Handler forehandler=new Handler();
+    public ImageView picture;
+    public RecyclerView recyclerView;
+    public Button popButton;
+    public FloatingActionButton okButton,quitButton;
     public static Uri imageUri,imageUri1;
     public static String imagePath,imagePath1;
     public static URL imageURL;
-    private Bitmap baseBitmap;
-    private Bitmap cropBitmap;
-    private Canvas canvas;
-    private Paint paint;
-    private PhotoCropView mCropView;
-    private boolean canvasEmpty=true;
-    private boolean picListEmpty=true;
-    private boolean floatingbtn=true;//ture表示用来发送截图，flase表示用来发送手绘图
-    private int sX,sY,eX,eY,coverWidth,coverHeight;
-    private double viewWidth=720;
-    private double viewHeight=1000;
-    private int mode,relativeX,relativeY,relativeWidth,relativeHeight;
+    public Bitmap baseBitmap;
+    public Bitmap cropBitmap;
+    public Canvas canvas;
+    public Paint paint;
+    public PhotoCropView mCropView;
+    public boolean canvasEmpty=true;
+    public boolean picListEmpty=true;
+    public boolean floatingbtn=true;//ture表示用来发送截图，flase表示用来发送手绘图
+    public int sX,sY,eX,eY,coverWidth,coverHeight;
+    public double viewWidth=720;
+    public double viewHeight=1000;
+    public int mode,relativeX,relativeY,relativeWidth,relativeHeight;
 
 
     @Override
@@ -160,8 +154,7 @@ public class ForeGroundActivity extends AppCompatActivity implements PhotoCropVi
             @Override
             public void onClick(View v) {
                 if (floatingbtn){//截取图片
-                    MainActivity.saveBitmap(picture,"foreback");
-                    picSave(baseBitmap,"forepicture.bmp");
+                    //picSave(baseBitmap,"forepicture.bmp");
                     String base64Crop=ImageUtil.bitmapToString(bmpPath);
                     mode=Calculate.ShowMode(baseBitmap,viewWidth,viewHeight);
                     relativeX= Calculate.RelativeStartX(baseBitmap,mode,sX,viewWidth,viewHeight);
@@ -169,8 +162,7 @@ public class ForeGroundActivity extends AppCompatActivity implements PhotoCropVi
                     relativeWidth=Calculate.RelativeWidth(baseBitmap,mode,sX,eX,viewWidth,viewHeight);
                     relativeHeight=Calculate.RelativeHeight(baseBitmap,mode,sY,eY,viewWidth,viewHeight);
                     Log.e(TAG,"模式："+mode+" 相对起点X："+relativeX+" 相对起点Y："+relativeY+" 相对宽度："+relativeWidth+" 相对高度："+relativeHeight);
-                    Log.e(TAG," 相对起点X："+String.valueOf(relativeX)+" 相对起点Y："+String.valueOf(relativeY)+" 相对宽度："+String.valueOf(relativeWidth)+" 相对高度："+relativeHeight);
-                    Log.e(TAG,"press"+base64Crop);
+                    Log.e(TAG,base64Crop);
 
                     /*new Thread(new Runnable() {
                         @Override
@@ -286,8 +278,6 @@ public class ForeGroundActivity extends AppCompatActivity implements PhotoCropVi
                         mSearchView.setVisibility(View.GONE);
                         popButton.setVisibility(View.GONE);
                         picture.setVisibility(View.VISIBLE);
-                        okButton.setVisibility(View.VISIBLE);
-                        quitButton.setVisibility(View.VISIBLE);
                         if (ContextCompat.checkSelfPermission(ForeGroundActivity.this, android.Manifest.permission.WRITE_EXTERNAL_STORAGE)!= PackageManager.PERMISSION_GRANTED){
                             ActivityCompat.requestPermissions(ForeGroundActivity.this,new String[]{android.Manifest.permission.WRITE_EXTERNAL_STORAGE},1);
                         }else {
@@ -300,8 +290,6 @@ public class ForeGroundActivity extends AppCompatActivity implements PhotoCropVi
                         mSearchView.setVisibility(View.GONE);
                         popButton.setVisibility(View.GONE);
                         picture.setVisibility(View.VISIBLE);
-                        okButton.setVisibility(View.VISIBLE);
-                        quitButton.setVisibility(View.VISIBLE);
                         //创建File对象，用于存储拍照后的图片,命名为outputimage.jpg,存放在SD卡应用关联缓存目录下
                         File outputImage = new File(getExternalCacheDir(),"output_image.jpg");
                         try {
@@ -394,7 +382,7 @@ public class ForeGroundActivity extends AppCompatActivity implements PhotoCropVi
     }
 
     //处理网络数据
-    private void parseJSONWithGSON(String jsonData){
+    public void parseJSONWithGSON(String jsonData){
         Gson gson=new Gson();
         try {
             PhotoDraft photoDraft=gson.fromJson(jsonData,PhotoDraft.class);
@@ -411,7 +399,7 @@ public class ForeGroundActivity extends AppCompatActivity implements PhotoCropVi
         }
     }
 
-    private void parseJSONWithGSONCrop(String jsonData){
+    public void parseJSONWithGSONCrop(String jsonData){
         Gson gson=new Gson();
         try {
             PhotoCrop photoCrop=gson.fromJson(jsonData,PhotoCrop.class);
@@ -442,7 +430,7 @@ public class ForeGroundActivity extends AppCompatActivity implements PhotoCropVi
     }
 
     //更新recyclerView中的图片
-    private void upDatePic(){
+    public void upDatePic(){
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -482,7 +470,7 @@ public class ForeGroundActivity extends AppCompatActivity implements PhotoCropVi
     }
 
     //打开图库
-    private void openAlbum(){
+    public void openAlbum(){
         Intent intent=new Intent("android.intent.action.GET_CONTENT");
         intent.setType("image/*");
         startActivityForResult(intent,CHOOSE_PHOTO);
@@ -531,8 +519,8 @@ public class ForeGroundActivity extends AppCompatActivity implements PhotoCropVi
                     }catch (FileNotFoundException e){
                         e.printStackTrace();
                     }
-                    imagePath=imageUri.getPath();//将图片信息的uri转换成路径
-                    baseBitmap=BitmapFactory.decodeFile(imagePath);
+                    bmpPath=imageUri.getPath();//将图片信息的uri转换成路径
+                    baseBitmap=BitmapFactory.decodeFile(bmpPath);
                     picture.setImageBitmap(baseBitmap);
                     mCropView.setVisibility(View.VISIBLE);
                     okButton.setVisibility(View.VISIBLE);
@@ -551,7 +539,7 @@ public class ForeGroundActivity extends AppCompatActivity implements PhotoCropVi
     }
 
     //处理从图库中选择的图片
-    private void handleImageOnKitkat(Intent data){
+    public void handleImageOnKitkat(Intent data){
         String imagePath=null;
         Uri uri=data.getData();
         if (DocumentsContract.isDocumentUri(this,uri)){
@@ -573,10 +561,11 @@ public class ForeGroundActivity extends AppCompatActivity implements PhotoCropVi
             imagePath=uri.getPath();
         }
         //cropPic(imagePath);
+        bmpPath=imagePath;
         displayImage(imagePath);//根据图片路径显示图片
     }
     //获取图库中图片的路径
-    private String getImagePath(Uri uri,String selection){
+    public String getImagePath(Uri uri,String selection){
         String path=null;
         //通过Uri和selection来获取真实的图片路径
         Cursor cursor=getContentResolver().query(uri,null,selection,null,null);
@@ -589,7 +578,7 @@ public class ForeGroundActivity extends AppCompatActivity implements PhotoCropVi
         return path;
     }
 
-    private void displayImage(String imagePath){
+    public void displayImage(String imagePath){
         if (imagePath!=null){
             baseBitmap=BitmapFactory.decodeFile(imagePath);
             picture.setImageBitmap(baseBitmap);
@@ -598,7 +587,7 @@ public class ForeGroundActivity extends AppCompatActivity implements PhotoCropVi
         }
     }
 
-    private void picSave(Bitmap bitmap,String name){
+    public void picSave(Bitmap bitmap,String name){
         Log.e(TAG, "保存图片");
         File f = new File(getExternalCacheDir(), name);
         if (f.exists()) {
@@ -619,26 +608,6 @@ public class ForeGroundActivity extends AppCompatActivity implements PhotoCropVi
         bmpPath=uri.getPath();
     }
 
-    private void picSave1(Bitmap bitmap,String name){
-        Log.e(TAG, "保存图片1");
-        File f = new File(getExternalCacheDir(), name);
-        if (f.exists()) {
-            f.delete();
-        }
-        try {
-            FileOutputStream out = new FileOutputStream(f);
-            bitmap.compress(Bitmap.CompressFormat.PNG, 90, out);
-            out.flush();
-            out.close();
-            Log.e(TAG, "已经保存1");
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        Uri uri=Uri.fromFile(f);
-        bmpPath=uri.getPath();
-    }
 
     /*//剪裁图片方法实现
     public void startPhotoZoom(Uri uri) {

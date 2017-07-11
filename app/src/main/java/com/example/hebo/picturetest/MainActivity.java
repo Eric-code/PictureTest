@@ -27,6 +27,7 @@ import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
+import com.example.hebo.picturetest.ForeAcivitity.Fore0Activity;
 import com.example.hebo.picturetest.JSON.HttpUtil;
 
 import java.io.File;
@@ -90,7 +91,6 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
             public boolean onNavigationItemSelected(MenuItem item) {
                 //在这里处理item的点击事件
                 //item.setCheckable(true);//设置选项可选
-                Intent fore_intent=new Intent(MainActivity.this,ForeGroundActivity.class);
                 switch (item.getItemId()){
                     case R.id.backgroundpicture:
                         Log.e(TAG, "显示背景图片+"+item.getItemId());
@@ -99,8 +99,14 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
                         item.setCheckable(false);//设置选项不可选
                         item.setChecked(true);
                         break;
-                    case R.id.foregroundpicture:
                     case R.id.foregroundpicture+1:
+                        Log.e(TAG,"前景界面1");
+                        Intent fore_intent1=new Intent(MainActivity.this,Fore0Activity.class);
+                        startActivity(fore_intent1);
+                        item.setCheckable(false);//设置选项不可选
+                        item.setChecked(true);
+                        break;
+                    case R.id.foregroundpicture:
                     case R.id.foregroundpicture+2:
                     case R.id.foregroundpicture+3:
                     case R.id.foregroundpicture+4:
@@ -110,7 +116,7 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
                     case R.id.foregroundpicture+8:
                     case R.id.foregroundpicture+9:
                     case R.id.foregroundpicture+10:
-                        Log.e(TAG, "显示前景图片+"+item.getItemId());
+                        Intent fore_intent=new Intent(MainActivity.this,ForeGroundActivity.class);
                         startActivity(fore_intent);
                         item.setCheckable(false);//设置选项不可选
                         item.setChecked(true);
@@ -140,7 +146,9 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
             public void onClick(View v) {
                 if (fore_picture_item_num>0){
                     navigationView.getMenu().removeItem(R.id.foregroundpicture+fore_picture_item_num);
-                    imageViews[fore_picture_item_num].setWillNotDraw(true);
+                    if (imageViews[fore_picture_item_num]!=null){
+                        imageViews[fore_picture_item_num].setWillNotDraw(true);
+                    }
                     fore_picture_item_num--;
                    // Toast.makeText(MainActivity.this,"删除前景+"+fore_picture_num,Toast.LENGTH_SHORT).show();
                 }
