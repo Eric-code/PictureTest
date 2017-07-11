@@ -187,7 +187,10 @@ public class ForeGroundActivity extends AppCompatActivity implements PhotoCropVi
                         @Override
                         public void onResponse(Call call, Response response) throws IOException {
                             String responseData=response.body().string();
+                            Log.e(TAG,"开始返回数据");
                             parseJSONWithGSONCrop(responseData);
+                            Log.e(TAG,"结束返回数据");
+
                         }
                         //对异常情况进行处理
                         @Override
@@ -407,6 +410,7 @@ public class ForeGroundActivity extends AppCompatActivity implements PhotoCropVi
             imageUri= Uri.parse(resultString);
             imageURL=new URL(resultString);
             bmpPath=imageUri.getPath();
+            Log.e(TAG,resultString);
             cropBitmap=HttpUtil.returnBitMap(resultString);
             new Thread(new Runnable() {
                 @Override
@@ -418,9 +422,6 @@ public class ForeGroundActivity extends AppCompatActivity implements PhotoCropVi
                     forehandler.sendMessage(message);
                 }
             }).start();
-            //picSave1(cropBitmap,"croppicture.bmp");
-            /*imageURL=new URL(result[0]);
-            imagePath=imageURL.getPath();*/
             Log.e(TAG,"裁剪图:"+resultString);
         }catch (Exception e){
             e.printStackTrace();

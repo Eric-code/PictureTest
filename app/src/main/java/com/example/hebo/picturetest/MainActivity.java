@@ -1,5 +1,6 @@
 package com.example.hebo.picturetest;
 
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -12,6 +13,7 @@ import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.view.menu.MenuView;
@@ -233,26 +235,45 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
                 mdrawerLayout.openDrawer(GravityCompat.START);
                 break;
             case R.id.delete:
-                back_picture.setWillNotDraw(true);
-                //清除imageView中的图片
-                if (fore_picture_num>0){
-                    for (int i=0;i<fore_picture_num;i++){
-                        imageViews[i].setWillNotDraw(true);
+                //弹出一个对话框
+                AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+                builder.setMessage("确认删除吗？");
+                builder.setTitle("提示");
+                builder.setPositiveButton("确认", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    dialog.dismiss();
+                    back_picture.setWillNotDraw(true);
+                    //清除imageView中的图片
+                    if (fore_picture_num>0){
+                        for (int i=0;i<fore_picture_num;i++){
+                            imageViews[i].setWillNotDraw(true);
+                        }
                     }
-                }
-                //删除前景图片的菜单选项
-                if (fore_picture_item_num>0){
-                    for (int i=fore_picture_item_num;i>0;i--){
-                        navigationView.getMenu().removeItem(R.id.foregroundpicture+fore_picture_item_num);
-                        fore_picture_item_num--;
+                    //删除前景图片的菜单选项
+                    if (fore_picture_item_num>0){
+
+                        for (int i=fore_picture_item_num;i>0;i--){
+                            navigationView.getMenu().removeItem(R.id.foregroundpicture+fore_picture_item_num);
+                            fore_picture_item_num--;
+                        }
                     }
-                }
-                Toast.makeText(this,"delete",Toast.LENGTH_SHORT).show();
+                    }
+                 });
+                builder.setNegativeButton("取消", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    dialog.dismiss();
+                    }
+                });
+                builder.create().show();
                 break;
-            case R.id.save:
-                saveBitmap(back_picture,"mixpic");
-                Toast.makeText(this,"保存图片:"+Environment.getExternalStorageDirectory(),Toast.LENGTH_SHORT).show();
-                Log.e(TAG, "保存图片:"+Environment.getExternalStorageDirectory());
+            case R.id.mix:
+                //saveBitmap(back_picture,"mixpic");
+
+
+                Toast.makeText(this,"融合图片:"+Environment.getExternalStorageDirectory(),Toast.LENGTH_SHORT).show();
+                Log.e(TAG, "融合图片:"+Environment.getExternalStorageDirectory());
                 break;
             default:
         }

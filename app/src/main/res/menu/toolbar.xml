@@ -7,9 +7,9 @@
         android:title="Delete"
         app:showAsAction="always"/>
     <item
-        android:id="@+id/save"
-        android:icon="@drawable/save"
-        android:title="Settings"
+        android:id="@+id/mix"
+        android:icon="@drawable/mix"
+        android:title="Mix"
         app:showAsAction="always"/>
 
 </menu>
