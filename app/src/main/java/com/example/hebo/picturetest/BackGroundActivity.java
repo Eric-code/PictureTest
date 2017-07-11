@@ -95,10 +95,10 @@ public class BackGroundActivity extends AppCompatActivity implements PhotoCropVi
             actionBar.setDisplayHomeAsUpEnabled(true);
         }
 
-        PhotoCropView mCropView = (PhotoCropView)findViewById(R.id.test);
+        /*PhotoCropView mCropView = (PhotoCropView)findViewById(R.id.test);
         mCropView.setLocationListener(this);
         ImageView imageView=(ImageView)findViewById(R.id.back_iamge);
-        imageView.setImageResource(R.drawable.nav_icon);
+        imageView.setImageResource(R.drawable.nav_icon);*/
 
         //搜索框下部检索提示信息显示
         //mListView=(ListView)findViewById(R.id.listView);

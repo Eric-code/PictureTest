@@ -49,6 +49,10 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
     public ImageView back_picture,fore_picture;
     int fore_picture_item_num=0;//前景图片选项的数目
     int fore_picture_num=0;//前景图片的数目
+    private int[] imageViewLeft={0,0,0,0,0,0,0,0,0,0};
+    private int[] imageViewRight={100,100,100,100,100,100,100,100,100,100};
+    private int[] imageViewTop={0,0,0,0,0,0,0,0,0,0};
+    private int[] imageViewBottom={100,100,100,100,100,100,100,100,100,100};
     public Uri imageUri;
     public URL imageURL;
     public String imagePath=null;
@@ -169,20 +173,30 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
                         break;
                     case CROP_PHOTO_MSG://接收到前景界面裁剪之后的图片
                         imagePath=ForeGroundActivity.bmpPath;
-                        Bitmap bitmap2=BitmapFactory.decodeFile(imagePath);
-                        //fore_picture.setImageBitmap(bitmap2);
+                        Bitmap bitmap2 =BitmapFactory.decodeFile(imagePath) ;
                         ImageView mImageView = new ImageView(MainActivity.this);
                         imageViews[fore_picture_num]=mImageView;
                         //设置图片长度高度
                         mImageView.setLayoutParams(new DrawerLayout.LayoutParams(DrawerLayout.LayoutParams.WRAP_CONTENT, DrawerLayout.LayoutParams.WRAP_CONTENT));
                         mImageView.setImageBitmap(bitmap2);
                         mImageView.setWillNotDraw(false);
+                        mImageView.setId(fore_picture_num);
                         mImageView.setOnTouchListener(MainActivity.this);
-                        if (fore_picture_num<10){
+                        if (fore_picture_num<10) {
                             fore_picture_num++;
                             r.addView(mImageView);
+                            for (int i = 0; i < fore_picture_num - 1; i++) {
+                                RelativeLayout.LayoutParams layoutParams = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
+                                layoutParams.setMargins(imageViewLeft[i], imageViewTop[i], imageViewRight[i], imageViewBottom[i]);
+                                imageViews[i].setLayoutParams(layoutParams);
+                                Log.e(TAG, "图片" + i + "已经重新放置");
+                            }
                         }
-                        Log.e(TAG,"消息收到");
+                       /* imagePath=ForeGroundActivity.bmpPath;
+                        Bitmap bitmap2=BitmapFactory.decodeFile(imagePath);*/
+                        //fore_picture.setImageBitmap(bitmap2);
+
+                        Log.e(TAG,"消息收");
                         break;
                     case BACK_PIC_CLICK:
                         imagePath=BackGroundActivity.bmpPath;
@@ -252,8 +266,13 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
                 int top = v.getTop() + dy;
                 int right = v.getRight() + dx;
                 int bottom = v.getBottom() + dy;
-                Log.i("life", " left = " + left + "  v.getLeft=" + v.getLeft() + " ; event.getRawX = " + event.getRawX() + " ; lastX = "
+                Log.i(TAG, " left = " + left + "  v.getLeft=" + v.getLeft() + " ; event.getRawX = " + event.getRawX() + " ; lastX = "
                         + lastX + " dx = " + dx);
+                Log.e(TAG,"ID:"+v.getId());
+                imageViewLeft[v.getId()]=left;
+                imageViewRight[v.getId()]=right;
+                imageViewTop[v.getId()]=top;
+                imageViewBottom[v.getId()]=bottom;
                 v.layout(left, top, right, bottom);
                 lastX = (int) event.getRawX();
                 lastY = (int) event.getRawY();

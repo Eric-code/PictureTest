@@ -161,7 +161,7 @@ public class ForeGroundActivity extends AppCompatActivity implements PhotoCropVi
             public void onClick(View v) {
                 if (floatingbtn){//截取图片
                     MainActivity.saveBitmap(picture,"foreback");
-                    picSave(baseBitmap);
+                    picSave(baseBitmap,"forepicture.bmp");
                     String base64Crop=ImageUtil.bitmapToString(bmpPath);
                     mode=Calculate.ShowMode(baseBitmap,viewWidth,viewHeight);
                     relativeX= Calculate.RelativeStartX(baseBitmap,mode,sX,viewWidth,viewHeight);
@@ -171,6 +171,17 @@ public class ForeGroundActivity extends AppCompatActivity implements PhotoCropVi
                     Log.e(TAG,"模式："+mode+" 相对起点X："+relativeX+" 相对起点Y："+relativeY+" 相对宽度："+relativeWidth+" 相对高度："+relativeHeight);
                     Log.e(TAG," 相对起点X："+String.valueOf(relativeX)+" 相对起点Y："+String.valueOf(relativeY)+" 相对宽度："+String.valueOf(relativeWidth)+" 相对高度："+relativeHeight);
                     Log.e(TAG,"press"+base64Crop);
+
+                    /*new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Message message=new Message();
+                            message.what=CROP_PHOTO_MSG;
+                            forehandler=MainActivity.revHandler;
+                            forehandler.sendMessage(message);
+                        }
+                    }).start();
+                    finish();//结束本活动，就直接显示主界面*/
                     //发送网络请求
                     RequestBody requestBody=new FormBody.Builder()
                             .add("value",base64Crop)//提交的请求
@@ -195,9 +206,10 @@ public class ForeGroundActivity extends AppCompatActivity implements PhotoCropVi
 
                 }else {//手绘图片
                     if (!canvasEmpty){
-                        picSave(baseBitmap);
+                        picSave(baseBitmap,"forepicture.bmp");
                         String base64Draw=ImageUtil.bitmapToString(bmpPath);
                         Log.e(TAG,"press"+base64Draw);
+
                         //发送网络请求
                         RequestBody requestBody=new FormBody.Builder()
                                 .add("value",base64Draw)//提交的请求
@@ -403,25 +415,30 @@ public class ForeGroundActivity extends AppCompatActivity implements PhotoCropVi
         Gson gson=new Gson();
         try {
             PhotoCrop photoCrop=gson.fromJson(jsonData,PhotoCrop.class);
-            resultString="result:http://10.108.125.20:8900/flaskr2/"+photoCrop.getResult();
+            resultString="http://10.108.125.20:8900/flaskr2/"+photoCrop.getResult();
+            imageUri= Uri.parse(resultString);
+            imageURL=new URL(resultString);
+            bmpPath=imageUri.getPath();
             cropBitmap=HttpUtil.returnBitMap(resultString);
-            picSave(cropBitmap);
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    picSave(cropBitmap,"cropbmp.bmp");
+                    Message message=new Message();
+                    message.what=CROP_PHOTO_MSG;
+                    forehandler=MainActivity.revHandler;
+                    forehandler.sendMessage(message);
+                }
+            }).start();
+            //picSave1(cropBitmap,"croppicture.bmp");
             /*imageURL=new URL(result[0]);
             imagePath=imageURL.getPath();*/
             Log.e(TAG,"裁剪图:"+resultString);
         }catch (Exception e){
             e.printStackTrace();
         }
-        /*new Thread(new Runnable() {
-            @Override
-            public void run() {
-                Message message=new Message();
-                message.what=CROP_PHOTO_MSG;
-                forehandler=MainActivity.revHandler;
-                forehandler.sendMessage(message);
-            }
-        }).start();
-        finish();//结束本活动，就直接显示主界面*/
+
+        finish();//结束本活动，就直接显示主界面
     }
 
     //更新recyclerView中的图片
@@ -581,9 +598,9 @@ public class ForeGroundActivity extends AppCompatActivity implements PhotoCropVi
         }
     }
 
-    private void picSave(Bitmap bitmap){
+    private void picSave(Bitmap bitmap,String name){
         Log.e(TAG, "保存图片");
-        File f = new File(getExternalCacheDir(), "forepicture.bmp");
+        File f = new File(getExternalCacheDir(), name);
         if (f.exists()) {
             f.delete();
         }
@@ -593,6 +610,27 @@ public class ForeGroundActivity extends AppCompatActivity implements PhotoCropVi
             out.flush();
             out.close();
             Log.e(TAG, "已经保存");
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        Uri uri=Uri.fromFile(f);
+        bmpPath=uri.getPath();
+    }
+
+    private void picSave1(Bitmap bitmap,String name){
+        Log.e(TAG, "保存图片1");
+        File f = new File(getExternalCacheDir(), name);
+        if (f.exists()) {
+            f.delete();
+        }
+        try {
+            FileOutputStream out = new FileOutputStream(f);
+            bitmap.compress(Bitmap.CompressFormat.PNG, 90, out);
+            out.flush();
+            out.close();
+            Log.e(TAG, "已经保存1");
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {
