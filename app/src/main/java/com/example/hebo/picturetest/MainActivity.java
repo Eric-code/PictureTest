@@ -171,18 +171,18 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
                         imagePath=ForeGroundActivity.bmpPath;
                         Bitmap bitmap2=BitmapFactory.decodeFile(imagePath);
                         //fore_picture.setImageBitmap(bitmap2);
-                        //ImageView mImageView = new ImageView(MainActivity.this);
-                        //imageViews[fore_picture_num]=mImageView;
+                        ImageView mImageView = new ImageView(MainActivity.this);
+                        imageViews[fore_picture_num]=mImageView;
                         //设置图片长度高度
-                        imageViews[fore_picture_num].setLayoutParams(new DrawerLayout.LayoutParams(DrawerLayout.LayoutParams.WRAP_CONTENT, DrawerLayout.LayoutParams.WRAP_CONTENT));
-                        imageViews[fore_picture_num].setImageBitmap(bitmap2);
-                        imageViews[fore_picture_num].setWillNotDraw(false);
-                        imageViews[fore_picture_num].setOnTouchListener(MainActivity.this);
+                        mImageView.setLayoutParams(new DrawerLayout.LayoutParams(DrawerLayout.LayoutParams.WRAP_CONTENT, DrawerLayout.LayoutParams.WRAP_CONTENT));
+                        mImageView.setImageBitmap(bitmap2);
+                        mImageView.setWillNotDraw(false);
+                        mImageView.setOnTouchListener(MainActivity.this);
                         if (fore_picture_num<10){
                             fore_picture_num++;
-                            r.addView(imageViews[fore_picture_num]);
+                            r.addView(mImageView);
                         }
-                        Log.e(TAG,"消息收到+");
+                        Log.e(TAG,"消息收到");
                         break;
                     case BACK_PIC_CLICK:
                         imagePath=BackGroundActivity.bmpPath;

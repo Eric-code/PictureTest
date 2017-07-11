@@ -34,7 +34,8 @@ public class PhotoCropView extends View {
     private static final int START_Y = 200;
 
     private static final float EDGE_WIDTH = 1.8f;
-    private static final int ACCURACY= 15;/*touch accuracy*/
+    private static final float MOREEDGE_WIDTH = 6.8f;
+    private static final int ACCURACY= 30;/*touch accuracy*/
 
     private int pointPosition;/*vertex of a rectangle*/
 
@@ -54,6 +55,7 @@ public class PhotoCropView extends View {
 
     private Paint mPaint;
     private Paint mPaintLine;
+    private Paint mPaintMoreLine;//绘制四个角的粗线
     private Bitmap mBitmapCover;
     private Bitmap mBitmapRectBlack;
     private PorterDuffXfermode xfermode;/*paint mode*/
@@ -96,6 +98,10 @@ public class PhotoCropView extends View {
         mPaintLine = new Paint();
         mPaintLine.setColor(Color.WHITE);
         mPaintLine.setStrokeWidth(2.0f);
+
+        mPaintMoreLine=new Paint();
+        mPaintMoreLine.setColor(Color.WHITE);
+        mPaintMoreLine.setStrokeWidth(5.0f);
     }
 
     /*生成bitmap*/
@@ -132,6 +138,15 @@ public class PhotoCropView extends View {
         canvas.drawLine((float) sX - EDGE_WIDTH, (float) eY + EDGE_WIDTH, (float) eX + EDGE_WIDTH, (float) eY + EDGE_WIDTH, mPaintLine);/*down -*/
         canvas.drawLine((float) sX - EDGE_WIDTH, (float) sY - EDGE_WIDTH, (float) sX - EDGE_WIDTH, (float) eY + EDGE_WIDTH, mPaintLine);/*left |*/
         canvas.drawLine((float) eX + EDGE_WIDTH, (float) sY - EDGE_WIDTH, (float) eX + EDGE_WIDTH, (float) eY + EDGE_WIDTH, mPaintLine);/*righ |*/
+
+        canvas.drawLine((float) sX - MOREEDGE_WIDTH, (float) sY - MOREEDGE_WIDTH,(float)(eX-sX)/10+(float)sX+MOREEDGE_WIDTH,(float)sY-MOREEDGE_WIDTH,mPaintMoreLine);
+        canvas.drawLine((float) eX - MOREEDGE_WIDTH-(float)(eX-sX)/10, (float) sY - MOREEDGE_WIDTH,(float)eX+MOREEDGE_WIDTH,(float)sY-MOREEDGE_WIDTH,mPaintMoreLine);
+        canvas.drawLine((float) sX - MOREEDGE_WIDTH, (float) eY + MOREEDGE_WIDTH,(float)(eX-sX)/10+(float)sX+MOREEDGE_WIDTH,(float)eY+MOREEDGE_WIDTH,mPaintMoreLine);
+        canvas.drawLine((float) eX - MOREEDGE_WIDTH-(float)(eX-sX)/10, (float) eY + MOREEDGE_WIDTH,(float)eX+MOREEDGE_WIDTH,(float)eY+MOREEDGE_WIDTH,mPaintMoreLine);
+        canvas.drawLine((float) sX - MOREEDGE_WIDTH, (float) sY - MOREEDGE_WIDTH,(float)sX-MOREEDGE_WIDTH,(float)sY-MOREEDGE_WIDTH+(float)(eY-sY)/10,mPaintMoreLine);
+        canvas.drawLine((float) sX - MOREEDGE_WIDTH, (float) eY - MOREEDGE_WIDTH-(float)(eY-sY)/10,(float)sX-MOREEDGE_WIDTH,(float)eY+MOREEDGE_WIDTH,mPaintMoreLine);
+        canvas.drawLine((float) eX + MOREEDGE_WIDTH, (float) sY - MOREEDGE_WIDTH,(float)eX+MOREEDGE_WIDTH,(float)sY-MOREEDGE_WIDTH+(float)(eY-sY)/10,mPaintMoreLine);
+        canvas.drawLine((float) eX + MOREEDGE_WIDTH, (float) eY - MOREEDGE_WIDTH-(float)(eY-sY)/10,(float)eX+MOREEDGE_WIDTH,(float)eY+MOREEDGE_WIDTH,mPaintMoreLine);
 
     }
 
@@ -172,6 +187,7 @@ public class PhotoCropView extends View {
                         pressX = (int) event.getX();
                         pressY = (int) event.getY();
                         mPaintLine.setColor(Color.rgb(255, 127, 0));
+                        mPaintMoreLine.setColor(Color.rgb(255, 127, 0));
                         moveByPoint(pressX, pressY);
                         postInvalidate();
                         break;
@@ -180,6 +196,7 @@ public class PhotoCropView extends View {
             break;
             case MotionEvent.ACTION_UP:
                 mPaintLine.setColor(Color.WHITE);
+                mPaintMoreLine.setColor(Color.WHITE);
                 postInvalidate();
                 break;
             default:

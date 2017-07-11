@@ -45,7 +45,9 @@ import android.widget.Toast;
 
 import com.example.hebo.picturetest.JSON.HttpUtil;
 import com.example.hebo.picturetest.JSON.Photo;
+import com.example.hebo.picturetest.JSON.PhotoCrop;
 import com.example.hebo.picturetest.JSON.PhotoDraft;
+import com.example.hebo.picturetest.image.Calculate;
 import com.example.hebo.picturetest.image.ImageUtil;
 import com.example.hebo.picturetest.recyclerView.Pic;
 import com.example.hebo.picturetest.recyclerView.PicAdapter;
@@ -83,6 +85,7 @@ public class ForeGroundActivity extends AppCompatActivity implements PhotoCropVi
     public static final int CHANGE_UI=0x23;
     public static String bmpPath=null;
     public static String[] result;
+    public static String resultString;
     private Handler forehandler=new Handler();
     private ImageView picture;
     private RecyclerView recyclerView;
@@ -92,6 +95,7 @@ public class ForeGroundActivity extends AppCompatActivity implements PhotoCropVi
     public static String imagePath,imagePath1;
     public static URL imageURL;
     private Bitmap baseBitmap;
+    private Bitmap cropBitmap;
     private Canvas canvas;
     private Paint paint;
     private PhotoCropView mCropView;
@@ -99,6 +103,9 @@ public class ForeGroundActivity extends AppCompatActivity implements PhotoCropVi
     private boolean picListEmpty=true;
     private boolean floatingbtn=true;//ture表示用来发送截图，flase表示用来发送手绘图
     private int sX,sY,eX,eY,coverWidth,coverHeight;
+    private double viewWidth=720;
+    private double viewHeight=1000;
+    private int mode,relativeX,relativeY,relativeWidth,relativeHeight;
 
 
     @Override
@@ -152,16 +159,48 @@ public class ForeGroundActivity extends AppCompatActivity implements PhotoCropVi
         okButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (floatingbtn){
+                if (floatingbtn){//截取图片
                     MainActivity.saveBitmap(picture,"foreback");
-                }else {
+                    picSave(baseBitmap);
+                    String base64Crop=ImageUtil.bitmapToString(bmpPath);
+                    mode=Calculate.ShowMode(baseBitmap,viewWidth,viewHeight);
+                    relativeX= Calculate.RelativeStartX(baseBitmap,mode,sX,viewWidth,viewHeight);
+                    relativeY= Calculate.RelativeStartY(baseBitmap,mode,sY,viewWidth,viewHeight);
+                    relativeWidth=Calculate.RelativeWidth(baseBitmap,mode,sX,eX,viewWidth,viewHeight);
+                    relativeHeight=Calculate.RelativeHeight(baseBitmap,mode,sY,eY,viewWidth,viewHeight);
+                    Log.e(TAG,"模式："+mode+" 相对起点X："+relativeX+" 相对起点Y："+relativeY+" 相对宽度："+relativeWidth+" 相对高度："+relativeHeight);
+                    Log.e(TAG," 相对起点X："+String.valueOf(relativeX)+" 相对起点Y："+String.valueOf(relativeY)+" 相对宽度："+String.valueOf(relativeWidth)+" 相对高度："+relativeHeight);
+                    Log.e(TAG,"press"+base64Crop);
+                    //发送网络请求
+                    RequestBody requestBody=new FormBody.Builder()
+                            .add("value",base64Crop)//提交的请求
+                            .add("x",String.valueOf(relativeX))
+                            .add("y",String.valueOf(relativeY))
+                            .add("width",String.valueOf(relativeWidth))
+                            .add("height",String.valueOf(relativeHeight))
+                            .build();
+                    HttpUtil.sendOkHttpRequest("http://10.108.125.20:8900/flaskr2/cropAndroid",requestBody,new Callback(){
+                        //得到服务器返回的具体内容
+                        @Override
+                        public void onResponse(Call call, Response response) throws IOException {
+                            String responseData=response.body().string();
+                            parseJSONWithGSONCrop(responseData);
+                        }
+                        //对异常情况进行处理
+                        @Override
+                        public void onFailure(Call call, IOException e) {
+                            //Toast.makeText(BackGroundActivity.this, "图片加载失败", Toast.LENGTH_SHORT).show();
+                        }
+                    });
+
+                }else {//手绘图片
                     if (!canvasEmpty){
                         picSave(baseBitmap);
-                        String base64String=ImageUtil.bitmapToString(bmpPath);
-                        Log.e(TAG,"press"+base64String);
+                        String base64Draw=ImageUtil.bitmapToString(bmpPath);
+                        Log.e(TAG,"press"+base64Draw);
                         //发送网络请求
                         RequestBody requestBody=new FormBody.Builder()
-                                .add("value",base64String)//提交的请求
+                                .add("value",base64Draw)//提交的请求
                                 .build();
                         HttpUtil.sendOkHttpRequest("http://10.108.125.20:8900/flaskr2/draftAndroid",requestBody,new Callback(){
                             //得到服务器返回的具体内容
@@ -186,9 +225,13 @@ public class ForeGroundActivity extends AppCompatActivity implements PhotoCropVi
         quitButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                canvas.drawColor(Color.rgb(245,245,245),PorterDuff.Mode.CLEAR);
-                picture.setImageBitmap(baseBitmap);
-                canvasEmpty=true;
+                if (floatingbtn){//截取图片
+
+                }else{
+                    canvas.drawColor(Color.rgb(245,245,245),PorterDuff.Mode.CLEAR);
+                    picture.setImageBitmap(baseBitmap);
+                    canvasEmpty=true;
+                }
             }
         });
 
@@ -209,7 +252,6 @@ public class ForeGroundActivity extends AppCompatActivity implements PhotoCropVi
                         recyclerView.setAdapter(adapter);
                         Log.e(TAG,"图形绘制");
                         break;
-
                     default:
                         break;
                 }
@@ -335,8 +377,8 @@ public class ForeGroundActivity extends AppCompatActivity implements PhotoCropVi
         sY=startY;
         eX=endX;
         eY=endY;
-        coverWidth=endX-sX;
-        coverHeight=endY-sY;
+        coverWidth=endX-startX;
+        coverHeight=endY-startY;
     }
 
     //处理网络数据
@@ -356,6 +398,32 @@ public class ForeGroundActivity extends AppCompatActivity implements PhotoCropVi
             e.printStackTrace();
         }
     }
+
+    private void parseJSONWithGSONCrop(String jsonData){
+        Gson gson=new Gson();
+        try {
+            PhotoCrop photoCrop=gson.fromJson(jsonData,PhotoCrop.class);
+            resultString="result:http://10.108.125.20:8900/flaskr2/"+photoCrop.getResult();
+            cropBitmap=HttpUtil.returnBitMap(resultString);
+            picSave(cropBitmap);
+            /*imageURL=new URL(result[0]);
+            imagePath=imageURL.getPath();*/
+            Log.e(TAG,"裁剪图:"+resultString);
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        /*new Thread(new Runnable() {
+            @Override
+            public void run() {
+                Message message=new Message();
+                message.what=CROP_PHOTO_MSG;
+                forehandler=MainActivity.revHandler;
+                forehandler.sendMessage(message);
+            }
+        }).start();
+        finish();//结束本活动，就直接显示主界面*/
+    }
+
     //更新recyclerView中的图片
     private void upDatePic(){
         new Thread(new Runnable() {
@@ -447,8 +515,8 @@ public class ForeGroundActivity extends AppCompatActivity implements PhotoCropVi
                         e.printStackTrace();
                     }
                     imagePath=imageUri.getPath();//将图片信息的uri转换成路径
-                    Bitmap bitmap1=BitmapFactory.decodeFile(imagePath);
-                    picture.setImageBitmap(bitmap1);
+                    baseBitmap=BitmapFactory.decodeFile(imagePath);
+                    picture.setImageBitmap(baseBitmap);
                     mCropView.setVisibility(View.VISIBLE);
                     okButton.setVisibility(View.VISIBLE);
                     quitButton.setVisibility(View.VISIBLE);
@@ -506,8 +574,8 @@ public class ForeGroundActivity extends AppCompatActivity implements PhotoCropVi
 
     private void displayImage(String imagePath){
         if (imagePath!=null){
-            Bitmap bitmap=BitmapFactory.decodeFile(imagePath);
-            picture.setImageBitmap(bitmap);
+            baseBitmap=BitmapFactory.decodeFile(imagePath);
+            picture.setImageBitmap(baseBitmap);
         }else {
             Toast.makeText(this,"获取图片失败",Toast.LENGTH_SHORT).show();
         }
@@ -524,7 +592,7 @@ public class ForeGroundActivity extends AppCompatActivity implements PhotoCropVi
             bitmap.compress(Bitmap.CompressFormat.PNG, 90, out);
             out.flush();
             out.close();
-            Log.i(TAG, "已经保存");
+            Log.e(TAG, "已经保存");
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {
