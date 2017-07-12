@@ -1,5 +1,6 @@
 package com.example.hebo.picturetest;
 
+import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -31,6 +32,7 @@ import android.widget.Toast;
 
 import com.example.hebo.picturetest.ForeAcivitity.Fore0Activity;
 import com.example.hebo.picturetest.JSON.HttpUtil;
+import com.example.hebo.picturetest.image.ImageUtil;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -58,12 +60,14 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
     private int[] imageViewBottom={100,100,100,100,100,100,100,100,100,100};
     public Uri imageUri;
     public URL imageURL;
+    String base64BackString;
     public String imagePath=null;
     public static Handler revHandler;
     int lastX, lastY;
     boolean itemEable=false;
     final ImageView[] imageViews = new ImageView[10];
     NavigationView navigationView;
+    ProgressDialog progressDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -163,7 +167,7 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
                     case TAKE_PHOTO_MSG://接收到背景界面拍摄得到的照片
                         imagePath=BackGroundActivity.imagePath;
                         Bitmap bitmap=BitmapFactory.decodeFile(imagePath);
-                        //Bitmap bitmap=(Bitmap)msg.obj;
+                        base64BackString=ImageUtil.bitmapToString(imagePath);//获取base64算法压缩之后的背景图字符串
                         back_picture.setWillNotDraw(false);
                         back_picture.setImageBitmap(bitmap);
                         Log.e(TAG,"消息收到+"+imageUri);
@@ -177,6 +181,7 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
                     case CHOOSE_PHOTO_MSG://接收到背景界面从相册得到的图片
                         imagePath=BackGroundActivity.imagePath;
                         Bitmap bitmap1=BitmapFactory.decodeFile(imagePath);
+                        base64BackString=ImageUtil.bitmapToString(imagePath);//获取base64算法压缩之后的背景图字符串
                         back_picture.setWillNotDraw(false);
                         back_picture.setImageBitmap(bitmap1);
                         Log.e(TAG,"消息收到+"+imageUri);
@@ -197,9 +202,9 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
                             r.addView(mImageView);
                             for (int i = 0; i < fore_picture_num - 1; i++) {
                                 RelativeLayout.LayoutParams layoutParams = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
-                                layoutParams.setMargins(imageViewLeft[i], imageViewTop[i], imageViewRight[i], imageViewBottom[i]);
+                                layoutParams.setMargins(imageViewLeft[i], imageViewTop[i], 720-imageViewRight[i], 960-imageViewBottom[i]);
                                 imageViews[i].setLayoutParams(layoutParams);
-                                Log.e(TAG, "图片" + i + "已经重新放置");
+                                Log.e(TAG, "图片" + i + "已经重新放置"+" sX="+imageViewLeft[i]+" sY="+imageViewTop[i]+" eX="+imageViewRight[i]+" eY="+imageViewBottom[i]);
                             }
                         }
                        /* imagePath=ForeGroundActivity.bmpPath;
@@ -270,9 +275,14 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
                 break;
             case R.id.mix:
                 //saveBitmap(back_picture,"mixpic");
-
-
-                Toast.makeText(this,"融合图片:"+Environment.getExternalStorageDirectory(),Toast.LENGTH_SHORT).show();
+                progressDialog=new ProgressDialog(MainActivity.this);
+                progressDialog.setTitle("任务正在执行中");
+                progressDialog.setMessage("任务正在执行中，请等待……");
+                progressDialog.setCancelable(true);
+                progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+                progressDialog.setIndeterminate(false);//不显示进度条
+                progressDialog.show();
+                //Toast.makeText(this,"融合图片:"+Environment.getExternalStorageDirectory(),Toast.LENGTH_SHORT).show();
                 Log.e(TAG, "融合图片:"+Environment.getExternalStorageDirectory());
                 break;
             default:
@@ -295,8 +305,8 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
                 int top = v.getTop() + dy;
                 int right = v.getRight() + dx;
                 int bottom = v.getBottom() + dy;
-                Log.i(TAG, " left = " + left + "  v.getLeft=" + v.getLeft() + " ; event.getRawX = " + event.getRawX() + " ; lastX = "
-                        + lastX + " dx = " + dx);
+                Log.i(TAG, " left = " + left + "  v.getTon=" + top + " ; event.getBottom = " + bottom + " ; right = "
+                        + right + " dx = " + dx);
                 Log.e(TAG,"ID:"+v.getId());
                 imageViewLeft[v.getId()]=left;
                 imageViewRight[v.getId()]=right;

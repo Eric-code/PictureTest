@@ -1,6 +1,7 @@
 package com.example.hebo.picturetest;
 
 
+import android.app.ProgressDialog;
 import android.content.ContentUris;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -98,14 +99,23 @@ public class ForeGroundActivity extends AppCompatActivity implements PhotoCropVi
     public boolean floatingbtn=true;//ture表示用来发送截图，flase表示用来发送手绘图
     public int sX,sY,eX,eY,coverWidth,coverHeight;
     public double viewWidth=720;
-    public double viewHeight=1000;
+    public double viewHeight=960;
     public int mode,relativeX,relativeY,relativeWidth,relativeHeight;
-
+    public ProgressDialog progressDialog;
+    public int albumorcamera=1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_fore_ground);
+
+        //配置进度等待框
+        progressDialog=new ProgressDialog(ForeGroundActivity.this);
+        progressDialog.setTitle("任务正在执行中");
+        progressDialog.setMessage("任务正在执行中，请等待……");
+        progressDialog.setCancelable(true);
+        progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+        progressDialog.setIndeterminate(false);//不显示进度条
 
         mCropView = (PhotoCropView)findViewById(R.id.crop);
         mCropView.setLocationListener(this);
@@ -124,6 +134,8 @@ public class ForeGroundActivity extends AppCompatActivity implements PhotoCropVi
         if (actionBar!=null){
             actionBar.setDisplayHomeAsUpEnabled(true);
         }
+
+
 
         mSearchView = (SearchView) findViewById(R.id.searchView1);
         mSearchView.onActionViewExpanded();// 写上此句后searchView初始是可以点击输入的状态
@@ -154,14 +166,22 @@ public class ForeGroundActivity extends AppCompatActivity implements PhotoCropVi
             @Override
             public void onClick(View v) {
                 if (floatingbtn){//截取图片
-                    //picSave(baseBitmap,"forepicture.bmp");
+                    if (albumorcamera==1){
+                        //progressDialog.show();
+                        mode=Calculate.ShowMode(baseBitmap,viewWidth,viewHeight);
+                        relativeX= Calculate.RelativeStartX(baseBitmap,mode,sX,viewWidth,viewHeight);
+                        relativeY= Calculate.RelativeStartY(baseBitmap,mode,sY,viewWidth,viewHeight);
+                        relativeWidth=Calculate.RelativeWidth(baseBitmap,mode,sX,eX,viewWidth,viewHeight);
+                        relativeHeight=Calculate.RelativeHeight(baseBitmap,mode,sY,eY,viewWidth,viewHeight);
+                    }
+                    else{
+                        relativeX=(int)(sX*780/viewWidth);
+                        relativeY=(int)(sY*780/viewWidth);
+                        relativeWidth=(int)((eX-sX)*780/viewWidth);
+                        relativeHeight=(int)((eY-sY)*780/viewWidth);
+                    }
                     String base64Crop=ImageUtil.bitmapToString(bmpPath);
-                    mode=Calculate.ShowMode(baseBitmap,viewWidth,viewHeight);
-                    relativeX= Calculate.RelativeStartX(baseBitmap,mode,sX,viewWidth,viewHeight);
-                    relativeY= Calculate.RelativeStartY(baseBitmap,mode,sY,viewWidth,viewHeight);
-                    relativeWidth=Calculate.RelativeWidth(baseBitmap,mode,sX,eX,viewWidth,viewHeight);
-                    relativeHeight=Calculate.RelativeHeight(baseBitmap,mode,sY,eY,viewWidth,viewHeight);
-                    Log.e(TAG,"模式："+mode+" 相对起点X："+relativeX+" 相对起点Y："+relativeY+" 相对宽度："+relativeWidth+" 相对高度："+relativeHeight);
+                    Log.e(TAG,"模式:"+mode+" 相对起点X："+relativeX+" 相对起点Y："+relativeY+" 相对宽度："+relativeWidth+" 相对高度："+relativeHeight);
                     Log.e(TAG,base64Crop);
 
                     /*new Thread(new Runnable() {
@@ -187,10 +207,7 @@ public class ForeGroundActivity extends AppCompatActivity implements PhotoCropVi
                         @Override
                         public void onResponse(Call call, Response response) throws IOException {
                             String responseData=response.body().string();
-                            Log.e(TAG,"开始返回数据");
                             parseJSONWithGSONCrop(responseData);
-                            Log.e(TAG,"结束返回数据");
-
                         }
                         //对异常情况进行处理
                         @Override
@@ -276,6 +293,7 @@ public class ForeGroundActivity extends AppCompatActivity implements PhotoCropVi
             public boolean onMenuItemClick(MenuItem item) {
                 switch (item.getItemId()) {
                     case R.id.choose_from_album://从相册中选择照片
+                        albumorcamera=1;
                         floatingbtn=true;
                         recyclerView.setVisibility(View.GONE);
                         mSearchView.setVisibility(View.GONE);
@@ -288,6 +306,7 @@ public class ForeGroundActivity extends AppCompatActivity implements PhotoCropVi
                         }
                         break;
                     case R.id.takephotos://拍摄照片
+                        albumorcamera=2;
                         floatingbtn=true;
                         recyclerView.setVisibility(View.GONE);
                         mSearchView.setVisibility(View.GONE);
@@ -410,7 +429,6 @@ public class ForeGroundActivity extends AppCompatActivity implements PhotoCropVi
             imageUri= Uri.parse(resultString);
             imageURL=new URL(resultString);
             bmpPath=imageUri.getPath();
-            Log.e(TAG,resultString);
             cropBitmap=HttpUtil.returnBitMap(resultString);
             new Thread(new Runnable() {
                 @Override
@@ -420,6 +438,7 @@ public class ForeGroundActivity extends AppCompatActivity implements PhotoCropVi
                     message.what=CROP_PHOTO_MSG;
                     forehandler=MainActivity.revHandler;
                     forehandler.sendMessage(message);
+                    progressDialog.dismiss();
                 }
             }).start();
             Log.e(TAG,"裁剪图:"+resultString);
@@ -500,7 +519,7 @@ public class ForeGroundActivity extends AppCompatActivity implements PhotoCropVi
                     handleImageOnKitkat(data);
                     mCropView.setVisibility(View.VISIBLE);
                     okButton.setVisibility(View.VISIBLE);
-                    quitButton.setVisibility(View.VISIBLE);
+                    //quitButton.setVisibility(View.VISIBLE);
                     //startPhotoZoom(data.getData());
                 }
                 break;
@@ -525,7 +544,7 @@ public class ForeGroundActivity extends AppCompatActivity implements PhotoCropVi
                     picture.setImageBitmap(baseBitmap);
                     mCropView.setVisibility(View.VISIBLE);
                     okButton.setVisibility(View.VISIBLE);
-                    quitButton.setVisibility(View.VISIBLE);
+                    //quitButton.setVisibility(View.VISIBLE);
                     //picture.setImageResource(R.drawable.apple);
                 }
                 break;
