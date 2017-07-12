@@ -87,6 +87,8 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
     public int showMode=1;
     public double viewWidth=720;
     public double viewHeight=1100;
+    static final int DOUBLE_CLICK_TIME_SPACE = 300; // 双击时间间隔
+    long lastClickTime = 0; // 单击时间
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -350,35 +352,46 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
     //前景图片手指移动指令
     @Override
     public boolean onTouch(View v, MotionEvent event) {
-        switch (event.getAction()) {
-            case MotionEvent.ACTION_DOWN:
-                lastX = (int) event.getRawX();
-                lastY = (int) event.getRawY();
-                break;
-            case MotionEvent.ACTION_MOVE:
-                int dx = (int) event.getRawX() - lastX;
-                int dy = (int) event.getRawY() - lastY;
-                int left = v.getLeft() + dx;
-                int top = v.getTop() + dy;
-                int right = v.getRight() + dx;
-                int bottom = v.getBottom() + dy;
-                Log.i(TAG, " left = " + left + "  v.getTon=" + top + " ; event.getBottom = " + bottom + " ; right = "
-                        + right + " dx = " + dx);
-                Log.e(TAG,"ID:"+v.getId());
-                imageViewLeft[v.getId()]=left;
-                imageViewRight[v.getId()]=right;
-                imageViewTop[v.getId()]=top;
-                imageViewBottom[v.getId()]=bottom;
-                v.layout(left, top, right, bottom);
-                lastX = (int) event.getRawX();
-                lastY = (int) event.getRawY();
-                break;
-            case MotionEvent.ACTION_UP:
-                imageDatasX[v.getId()]=String.valueOf(Calculate.RelativeStartX(backBitmap,showMode,imageViewLeft[v.getId()],viewWidth,viewHeight));
-                imageDatasY[v.getId()]=String.valueOf(Calculate.RelativeStartY(backBitmap,showMode,imageViewTop[v.getId()],viewWidth,viewHeight));
-                imageDatasWidth[v.getId()]=String.valueOf(Calculate.RelativeWidth(backBitmap,showMode,imageViewLeft[v.getId()],imageViewRight[v.getId()],viewWidth,viewHeight));
-                imageDatasHeight[v.getId()]=String.valueOf(Calculate.RelativeHeight(backBitmap,showMode,imageViewTop[v.getId()],imageViewBottom[v.getId()],viewWidth,viewHeight));
-                break;
+       /* if(event.getPointerCount()==1){
+            if (event.getEventTime() - lastClickTime < DOUBLE_CLICK_TIME_SPACE) {
+                int left = v.getLeft();
+                int top = v.getTop();
+                int right = v.getRight();
+                int bottom = v.getBottom();
+                int width=right-left;
+                int height=bottom-top;
+                v.layout(left-1,top-1,right+1,bottom+1);
+            }else {*/
+                switch (event.getAction()) {
+                    case MotionEvent.ACTION_DOWN:
+                        lastX = (int) event.getRawX();
+                        lastY = (int) event.getRawY();
+                        break;
+                    case MotionEvent.ACTION_MOVE:
+                        int dx = (int) event.getRawX() - lastX;
+                        int dy = (int) event.getRawY() - lastY;
+                        int left = v.getLeft() + dx;
+                        int top = v.getTop() + dy;
+                        int right = v.getRight() + dx;
+                        int bottom = v.getBottom() + dy;
+                        Log.i(TAG, " left = " + left + "  v.getTon=" + top + " ; event.getBottom = " + bottom + " ; right = "
+                                + right + " dx = " + dx);
+                        Log.e(TAG,"ID:"+v.getId());
+                        imageViewLeft[v.getId()]=left;
+                        imageViewRight[v.getId()]=right;
+                        imageViewTop[v.getId()]=top;
+                        imageViewBottom[v.getId()]=bottom;
+                        v.layout(left, top, right, bottom);
+                        lastX = (int) event.getRawX();
+                        lastY = (int) event.getRawY();
+                        break;
+                    case MotionEvent.ACTION_UP:
+                        imageDatasX[v.getId()]=String.valueOf(Calculate.RelativeStartX(backBitmap,showMode,imageViewLeft[v.getId()],viewWidth,viewHeight));
+                        imageDatasY[v.getId()]=String.valueOf(Calculate.RelativeStartY(backBitmap,showMode,imageViewTop[v.getId()],viewWidth,viewHeight));
+                        imageDatasWidth[v.getId()]=String.valueOf(Calculate.RelativeWidth(backBitmap,showMode,imageViewLeft[v.getId()],imageViewRight[v.getId()],viewWidth,viewHeight));
+                        imageDatasHeight[v.getId()]=String.valueOf(Calculate.RelativeHeight(backBitmap,showMode,imageViewTop[v.getId()],imageViewBottom[v.getId()],viewWidth,viewHeight));
+                        break;
+
         }
         return true;
     }
@@ -393,6 +406,9 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
             bmpPath=imageUri.getPath();
             cropBitmap=HttpUtil.returnBitMap(resultString);*/
             Log.e(TAG,"融合图:"+resultString);
+            Intent lastintent=new Intent(MainActivity.this,LastActivity.class);
+            lastintent.putExtra("result",resultString);
+            startActivity(lastintent);
         }catch (Exception e){
             e.printStackTrace();
         }

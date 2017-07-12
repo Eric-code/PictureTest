@@ -33,7 +33,8 @@
         </provider>
 
         <activity android:name=".ForeGroundActivity" />
-        <activity android:name=".ForeAcivitity.Fore0Activity"></activity>
+        <activity android:name=".ForeAcivitity.Fore0Activity" />
+        <activity android:name=".LastActivity"></activity>
     </application>
 
 </manifest>
