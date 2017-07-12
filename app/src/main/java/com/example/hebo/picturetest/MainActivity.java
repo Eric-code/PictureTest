@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
+import android.graphics.Point;
 import android.net.Uri;
 import android.os.Environment;
 import android.os.Handler;
@@ -87,8 +88,10 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
     public int showMode=1;
     public double viewWidth=720;
     public double viewHeight=1100;
-    static final int DOUBLE_CLICK_TIME_SPACE = 300; // 双击时间间隔
-    long lastClickTime = 0; // 单击时间
+    double nLenStart = 0;//双指之间几何距离
+    float preLen=0;
+    float nowLen=0;
+    boolean singleTouch=true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -352,46 +355,118 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
     //前景图片手指移动指令
     @Override
     public boolean onTouch(View v, MotionEvent event) {
-       /* if(event.getPointerCount()==1){
-            if (event.getEventTime() - lastClickTime < DOUBLE_CLICK_TIME_SPACE) {
-                int left = v.getLeft();
-                int top = v.getTop();
-                int right = v.getRight();
-                int bottom = v.getBottom();
-                int width=right-left;
-                int height=bottom-top;
-                v.layout(left-1,top-1,right+1,bottom+1);
-            }else {*/
-                switch (event.getAction()) {
-                    case MotionEvent.ACTION_DOWN:
-                        lastX = (int) event.getRawX();
-                        lastY = (int) event.getRawY();
-                        break;
-                    case MotionEvent.ACTION_MOVE:
-                        int dx = (int) event.getRawX() - lastX;
-                        int dy = (int) event.getRawY() - lastY;
-                        int left = v.getLeft() + dx;
-                        int top = v.getTop() + dy;
-                        int right = v.getRight() + dx;
-                        int bottom = v.getBottom() + dy;
-                        Log.i(TAG, " left = " + left + "  v.getTon=" + top + " ; event.getBottom = " + bottom + " ; right = "
-                                + right + " dx = " + dx);
-                        Log.e(TAG,"ID:"+v.getId());
-                        imageViewLeft[v.getId()]=left;
-                        imageViewRight[v.getId()]=right;
-                        imageViewTop[v.getId()]=top;
-                        imageViewBottom[v.getId()]=bottom;
-                        v.layout(left, top, right, bottom);
-                        lastX = (int) event.getRawX();
-                        lastY = (int) event.getRawY();
-                        break;
-                    case MotionEvent.ACTION_UP:
-                        imageDatasX[v.getId()]=String.valueOf(Calculate.RelativeStartX(backBitmap,showMode,imageViewLeft[v.getId()],viewWidth,viewHeight));
-                        imageDatasY[v.getId()]=String.valueOf(Calculate.RelativeStartY(backBitmap,showMode,imageViewTop[v.getId()],viewWidth,viewHeight));
-                        imageDatasWidth[v.getId()]=String.valueOf(Calculate.RelativeWidth(backBitmap,showMode,imageViewLeft[v.getId()],imageViewRight[v.getId()],viewWidth,viewHeight));
-                        imageDatasHeight[v.getId()]=String.valueOf(Calculate.RelativeHeight(backBitmap,showMode,imageViewTop[v.getId()],imageViewBottom[v.getId()],viewWidth,viewHeight));
-                        break;
-
+        int nCnt = event.getPointerCount();
+        int n = event.getAction();
+        int xlen,ylen;
+        int viewLeft=v.getLeft();
+        int viewRight=v.getRight();
+        int viewTop=v.getTop();
+        int viewBottom=v.getBottom();
+        /*if( (event.getAction()&MotionEvent.ACTION_MASK) == MotionEvent.ACTION_POINTER_DOWN && 2 == nCnt)
+        {
+            for(int i=0; i< nCnt; i++)
+            {
+                float x = event.getX(i);
+                float y = event.getY(i);
+                Point pt = new Point((int)x, (int)y);
+            }
+            int xlen = Math.abs((int)event.getX(0) - (int)event.getX(1));
+            int ylen = Math.abs((int)event.getY(0) - (int)event.getY(1));
+            nLenStart = Math.sqrt((double)xlen*xlen + (double)ylen * ylen);
+        }else if( (event.getAction()&MotionEvent.ACTION_MASK) == MotionEvent.ACTION_POINTER_UP  && 2 == nCnt)
+        {
+            for(int i=0; i< nCnt; i++)
+            {
+                float x = event.getX(i);
+                float y = event.getY(i);
+                Point pt = new Point((int)x, (int)y);
+            }
+            int xlen = Math.abs((int)event.getX(0) - (int)event.getX(1));
+            int ylen = Math.abs((int)event.getY(0) - (int)event.getY(1));
+            double nLenEnd = Math.sqrt((double)xlen*xlen + (double)ylen * ylen);
+            if(nLenEnd > nLenStart)//通过两个手指开始距离和结束距离，来判断放大缩小
+            {
+                v.layout(viewLeft-5,viewTop-5,viewRight+5,viewBottom+5);
+            }
+            else
+            {
+                v.layout(viewLeft+5,viewTop+5,viewRight-5,viewBottom-5);
+            }
+        }*/
+        if (nCnt==2){
+            switch (event.getAction()) {
+                case MotionEvent.ACTION_DOWN:
+                    for(int i=0; i< nCnt; i++)
+                    {
+                        float x = event.getX(i);
+                        float y = event.getY(i);
+                        Point pt = new Point((int)x, (int)y);
+                    }
+                    xlen = Math.abs((int)event.getX(0) - (int)event.getX(1));
+                    ylen = Math.abs((int)event.getY(0) - (int)event.getY(1));
+                    preLen=(float) Math.sqrt(xlen*xlen +  ylen * ylen);
+                    break;
+                case MotionEvent.ACTION_MOVE:
+                    for(int i=0; i< nCnt; i++)
+                    {
+                        float x = event.getX(i);
+                        float y = event.getY(i);
+                        Point pt = new Point((int)x, (int)y);
+                    }
+                    xlen = Math.abs((int)event.getX(0) - (int)event.getX(1));
+                    ylen = Math.abs((int)event.getY(0) - (int)event.getY(1));
+                    nowLen=(float) Math.sqrt(xlen*xlen +  ylen * ylen);
+                    if (nowLen>preLen){
+                        v.layout(viewLeft-3,viewTop-3,viewRight+3,viewBottom+3);
+                    }else if(nowLen<preLen){
+                        v.layout(viewLeft+3,viewTop+3,viewRight-3,viewBottom-3);
+                    }
+                    preLen=(float) Math.sqrt(xlen*xlen +  ylen * ylen);
+                    break;
+                case MotionEvent.ACTION_UP:
+                    singleTouch=false;
+                    imageDatasX[v.getId()] = String.valueOf(Calculate.RelativeStartX(backBitmap, showMode, v.getLeft(), viewWidth, viewHeight));
+                    imageDatasY[v.getId()] = String.valueOf(Calculate.RelativeStartY(backBitmap, showMode, v.getTop(), viewWidth, viewHeight));
+                    imageDatasWidth[v.getId()] = String.valueOf(Calculate.RelativeWidth(backBitmap, showMode, v.getLeft(), v.getRight(), viewWidth, viewHeight));
+                    imageDatasHeight[v.getId()] = String.valueOf(Calculate.RelativeHeight(backBitmap, showMode, v.getTop(), v.getBottom(), viewWidth, viewHeight));
+                    break;
+            }
+        }
+        if ((nCnt==1)&&singleTouch){
+            switch (event.getAction()) {
+                case MotionEvent.ACTION_DOWN:
+                    lastX = (int) event.getRawX();
+                    lastY = (int) event.getRawY();
+                    break;
+                case MotionEvent.ACTION_MOVE:
+                    int dx = (int) event.getRawX() - lastX;
+                    int dy = (int) event.getRawY() - lastY;
+                    if ((dx>40)||(dx<-40))
+                        dx=0;
+                    if ((dy>40)||(dy<-40))
+                        dy=0;
+                    int left = v.getLeft() + dx;
+                    int top = v.getTop() + dy;
+                    int right = v.getRight() + dx;
+                    int bottom = v.getBottom() + dy;
+                    Log.e(TAG,"dx:"+dx+" dy:"+dy);
+                    Log.i(TAG, " left = " + left + "  v.getTon=" + top + " ; event.getBottom = " + bottom + " ; right = " + right + " dx = " + dx);
+                    Log.i(TAG, "ID:" + v.getId());
+                    imageViewLeft[v.getId()] = left;
+                    imageViewRight[v.getId()] = right;
+                    imageViewTop[v.getId()] = top;
+                    imageViewBottom[v.getId()] = bottom;
+                    v.layout(left, top, right, bottom);
+                    lastX = (int) event.getRawX();
+                    lastY = (int) event.getRawY();
+                    break;
+                case MotionEvent.ACTION_UP:
+                    imageDatasX[v.getId()] = String.valueOf(Calculate.RelativeStartX(backBitmap, showMode, imageViewLeft[v.getId()], viewWidth, viewHeight));
+                    imageDatasY[v.getId()] = String.valueOf(Calculate.RelativeStartY(backBitmap, showMode, imageViewTop[v.getId()], viewWidth, viewHeight));
+                    imageDatasWidth[v.getId()] = String.valueOf(Calculate.RelativeWidth(backBitmap, showMode, imageViewLeft[v.getId()], imageViewRight[v.getId()], viewWidth, viewHeight));
+                    imageDatasHeight[v.getId()] = String.valueOf(Calculate.RelativeHeight(backBitmap, showMode, imageViewTop[v.getId()], imageViewBottom[v.getId()], viewWidth, viewHeight));
+                    break;
+            }
         }
         return true;
     }
