@@ -32,7 +32,10 @@ import android.widget.Toast;
 
 import com.example.hebo.picturetest.ForeAcivitity.Fore0Activity;
 import com.example.hebo.picturetest.JSON.HttpUtil;
+import com.example.hebo.picturetest.JSON.PhotoCrop;
+import com.example.hebo.picturetest.image.Calculate;
 import com.example.hebo.picturetest.image.ImageUtil;
+import com.google.gson.Gson;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -43,6 +46,12 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
+
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.FormBody;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 
 public class MainActivity extends AppCompatActivity implements View.OnTouchListener {
     private static final String TAG = "MainActivity";
@@ -58,9 +67,15 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
     private int[] imageViewRight={100,100,100,100,100,100,100,100,100,100};
     private int[] imageViewTop={0,0,0,0,0,0,0,0,0,0};
     private int[] imageViewBottom={100,100,100,100,100,100,100,100,100,100};
+    private String[] imageDatas={"0","1","2","3","4","5","6","7","8","9"};
+    private String[] imageDatasId={"0","1","2","3","4","5","6","7","8","9"};
+    private String[] imageDatasX={"0","1","2","3","4","5","6","7","8","9"};
+    private String[] imageDatasY={"0","1","2","3","4","5","6","7","8","9"};
+    private String[] imageDatasWidth={"0","1","2","3","4","5","6","7","8","9"};
+    private String[] imageDatasHeight={"0","1","2","3","4","5","6","7","8","9"};
     public Uri imageUri;
     public URL imageURL;
-    String base64BackString;
+    String base64BackString="123456";
     public String imagePath=null;
     public static Handler revHandler;
     int lastX, lastY;
@@ -68,6 +83,10 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
     final ImageView[] imageViews = new ImageView[10];
     NavigationView navigationView;
     ProgressDialog progressDialog;
+    public Bitmap backBitmap;
+    public int showMode=1;
+    public double viewWidth=720;
+    public double viewHeight=1100;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -166,10 +185,11 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
                 switch (msg.what){
                     case TAKE_PHOTO_MSG://接收到背景界面拍摄得到的照片
                         imagePath=BackGroundActivity.imagePath;
-                        Bitmap bitmap=BitmapFactory.decodeFile(imagePath);
+                        backBitmap=BitmapFactory.decodeFile(imagePath);
                         base64BackString=ImageUtil.bitmapToString(imagePath);//获取base64算法压缩之后的背景图字符串
                         back_picture.setWillNotDraw(false);
-                        back_picture.setImageBitmap(bitmap);
+                        back_picture.setImageBitmap(backBitmap);
+                        showMode=4;
                         Log.e(TAG,"消息收到+"+imageUri);
                         /*try {
                             //imageUri=BackGroundActivity.imageUri;
@@ -180,11 +200,20 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
                         break;
                     case CHOOSE_PHOTO_MSG://接收到背景界面从相册得到的图片
                         imagePath=BackGroundActivity.imagePath;
-                        Bitmap bitmap1=BitmapFactory.decodeFile(imagePath);
+                        backBitmap=BitmapFactory.decodeFile(imagePath);
                         base64BackString=ImageUtil.bitmapToString(imagePath);//获取base64算法压缩之后的背景图字符串
                         back_picture.setWillNotDraw(false);
-                        back_picture.setImageBitmap(bitmap1);
+                        back_picture.setImageBitmap(backBitmap);
+                        showMode=Calculate.ShowMode(backBitmap,viewWidth,viewHeight);
                         Log.e(TAG,"消息收到+"+imageUri);
+                        break;
+                    case BACK_PIC_CLICK://获取从背景界面搜索得到的图
+                        imagePath=BackGroundActivity.bmpPath;
+                        backBitmap=BitmapFactory.decodeFile(imagePath);
+                        back_picture.setWillNotDraw(false);
+                        back_picture.setImageBitmap(backBitmap);
+                        showMode=Calculate.ShowMode(backBitmap,viewWidth,viewHeight);
+                        Log.e(TAG,"大图绘制成功");
                         break;
                     case CROP_PHOTO_MSG://接收到前景界面裁剪之后的图片
                         imagePath=ForeGroundActivity.bmpPath;
@@ -197,28 +226,32 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
                         mImageView.setWillNotDraw(false);
                         mImageView.setId(fore_picture_num);
                         mImageView.setOnTouchListener(MainActivity.this);
+                        String str=ForeGroundActivity.imageId;//记录图片id,只选取其中的数字标识符
+                        str=str.trim();
+                        String str2="";
+                        if(str != null && !"".equals(str)) {
+                            for (int j = 0; j < str.length(); j++) {
+                                if (str.charAt(j) >= 48 && str.charAt(j) <= 57) {
+                                    str2 += str.charAt(j);
+                                }
+                            }
+                        }
+                        imageDatasId[fore_picture_num]=str2;
                         if (fore_picture_num<10) {
-                            fore_picture_num++;
                             r.addView(mImageView);
-                            for (int i = 0; i < fore_picture_num - 1; i++) {
+                            for (int i = 0; i < fore_picture_num ; i++) {
                                 RelativeLayout.LayoutParams layoutParams = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
                                 layoutParams.setMargins(imageViewLeft[i], imageViewTop[i], 720-imageViewRight[i], 960-imageViewBottom[i]);
                                 imageViews[i].setLayoutParams(layoutParams);
                                 Log.e(TAG, "图片" + i + "已经重新放置"+" sX="+imageViewLeft[i]+" sY="+imageViewTop[i]+" eX="+imageViewRight[i]+" eY="+imageViewBottom[i]);
                             }
+                            fore_picture_num++;
                         }
                        /* imagePath=ForeGroundActivity.bmpPath;
                         Bitmap bitmap2=BitmapFactory.decodeFile(imagePath);*/
                         //fore_picture.setImageBitmap(bitmap2);
 
                         Log.e(TAG,"消息收");
-                        break;
-                    case BACK_PIC_CLICK:
-                        imagePath=BackGroundActivity.bmpPath;
-                        Bitmap bitmap3=BitmapFactory.decodeFile(imagePath);
-                        back_picture.setWillNotDraw(false);
-                        back_picture.setImageBitmap(bitmap3);
-                        Log.e(TAG,"大图绘制成功");
                         break;
                     default:
                         break;
@@ -275,17 +308,41 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
                 break;
             case R.id.mix:
                 //saveBitmap(back_picture,"mixpic");
-                progressDialog=new ProgressDialog(MainActivity.this);
+                /*progressDialog=new ProgressDialog(MainActivity.this);
                 progressDialog.setTitle("任务正在执行中");
                 progressDialog.setMessage("任务正在执行中，请等待……");
                 progressDialog.setCancelable(true);
                 progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
                 progressDialog.setIndeterminate(false);//不显示进度条
-                progressDialog.show();
-                //Toast.makeText(this,"融合图片:"+Environment.getExternalStorageDirectory(),Toast.LENGTH_SHORT).show();
-                Log.e(TAG, "融合图片:"+Environment.getExternalStorageDirectory());
+                progressDialog.show();*/
+                getToString(fore_picture_num);
+                String imageData=getToLastString(imageDatas,fore_picture_num);
+                Log.e(TAG, "融合:"+imageData);
+                if (base64BackString==null){//背景图片为空
+                    new  AlertDialog.Builder(MainActivity.this).setTitle("错误！").setMessage("背景不能为空!").setPositiveButton("确定",null).show();
+                }else {
+                    RequestBody requestBody=new FormBody.Builder()
+                            .add("value",base64BackString)
+                            .add("imageData",imageData)//提交的请求
+                            .build();
+                    HttpUtil.sendOkHttpRequest("http://10.108.125.20:8900/flaskr2/mixAndroid",requestBody,new Callback(){
+                        //得到服务器返回的具体内容
+                        @Override
+                        public void onResponse(Call call, Response response) throws IOException {
+                            String responseData=response.body().string();
+                            parseJSONWithGSONCrop(responseData);
+                        }
+                        //对异常情况进行处理
+                        @Override
+                        public void onFailure(Call call, IOException e) {
+                            //Toast.makeText(BackGroundActivity.this, "图片加载失败", Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                }
+                Log.e(TAG, "融合背景图片:"+base64BackString);
                 break;
             default:
+                break;
         }
         return true;
     }
@@ -317,10 +374,30 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
                 lastY = (int) event.getRawY();
                 break;
             case MotionEvent.ACTION_UP:
+                imageDatasX[v.getId()]=String.valueOf(Calculate.RelativeStartX(backBitmap,showMode,imageViewLeft[v.getId()],viewWidth,viewHeight));
+                imageDatasY[v.getId()]=String.valueOf(Calculate.RelativeStartY(backBitmap,showMode,imageViewTop[v.getId()],viewWidth,viewHeight));
+                imageDatasWidth[v.getId()]=String.valueOf(Calculate.RelativeWidth(backBitmap,showMode,imageViewLeft[v.getId()],imageViewRight[v.getId()],viewWidth,viewHeight));
+                imageDatasHeight[v.getId()]=String.valueOf(Calculate.RelativeHeight(backBitmap,showMode,imageViewTop[v.getId()],imageViewBottom[v.getId()],viewWidth,viewHeight));
                 break;
         }
         return true;
     }
+
+    public void parseJSONWithGSONCrop(String jsonData){
+        Gson gson=new Gson();
+        try {
+            PhotoCrop photoCrop=gson.fromJson(jsonData,PhotoCrop.class);
+            String resultString="http://10.108.125.20:8900/flaskr2/"+photoCrop.getResult();
+            /*imageUri= Uri.parse(resultString);
+            imageURL=new URL(resultString);
+            bmpPath=imageUri.getPath();
+            cropBitmap=HttpUtil.returnBitMap(resultString);*/
+            Log.e(TAG,"融合图:"+resultString);
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
 
     //保存View为图片的方法
     public static void saveBitmap(View v, String name) {
@@ -344,6 +421,32 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    //获取iamgeData内部子数组
+    public void getToString(int pictureNum){
+        if (pictureNum<10){
+            for (int i=0;i<pictureNum;i++){
+                imageDatas[i]="{'id':"+imageDatasId[i]+","
+                        + "'x1':"+imageDatasX[i]+","
+                        + "'y':"+imageDatasY[i]+","
+                        + "'width':"+imageDatasWidth[i]+","
+                        + "'height':"+imageDatasHeight[i]+","
+                        + "'rotate':0}";
+            }
+        }
+    }
+    public String getToLastString(String[] arrayData,int pictureNum) {
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append("[");
+        for (int i = 0 ; i < pictureNum; i++) {
+            stringBuilder.append(arrayData[i]);
+            if (i < pictureNum - 1) {
+                stringBuilder.append(",");
+            }
+        }
+        stringBuilder.append("]");
+        return stringBuilder.toString();
     }
 
 }

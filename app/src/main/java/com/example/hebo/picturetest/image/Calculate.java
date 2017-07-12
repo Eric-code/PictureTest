@@ -41,6 +41,9 @@ public class Calculate {
                 blankleft=(viewwidth-bmpWidth*viewheight/bmpHeight)/2;
                 relativesX=(int)((startX-blankleft)*bmpHeight/viewheight);
                 break;
+            case 4://获得的图片为拍摄得到
+                relativesX=(int)(startX*780/viewwidth);
+                break;
         }
         return relativesX;
     }
@@ -63,6 +66,10 @@ public class Calculate {
             case 3://适配高度
                 relativesY=(int)(startY*bmpHeight/viewheight);
                 break;
+            case 4://获得的图片为拍摄得到
+                blanktop=(viewheight-960)/2;
+                relativesY=(int)((startY-blanktop)*780/viewwidth);
+                break;
         }
         return relativesY;
     }
@@ -82,11 +89,15 @@ public class Calculate {
                 break;
             case 3://适配高度
                 relativeWidth=(int)(width*bmpHeight/viewheight);
+                break;
+            case 4://获得的图片为拍摄得到
+                relativeWidth=(int)(width*780/viewwidth);
+                break;
         }
         return relativeWidth;
     }
 
-    //根据显示模式计算相对宽度
+    //根据显示模式计算相对高度
     public static int RelativeHeight(Bitmap bitmap,int mode,int startY,int endY,double viewwidth,double viewheight){
         double bmpWidth=bitmap.getWidth();
         double bmpHeight=bitmap.getHeight();
@@ -101,6 +112,10 @@ public class Calculate {
                 break;
             case 3://适配高度
                 relativeHeight=(int)(height*bmpHeight/viewheight);
+                break;
+            case 4://获得的图片为拍摄得到
+                relativeHeight=(int)(height*780/viewwidth);
+                break;
         }
         return relativeHeight;
     }

@@ -72,6 +72,7 @@ public class ForeGroundActivity extends AppCompatActivity implements PhotoCropVi
     public PopupMenu popupMenu;
     public Menu menu;
     public static final String TAG = "ForeGroundActivity";
+    public static  String imageId;
     public static final int TAKE_PHOTO=1;//照相
     public static final int CHOOSE_PHOTO=2;//图库中选择照片
     public static final int EMPTY_ESTIMATE=3;//图片非空判断，防止重新剪裁时报错
@@ -425,7 +426,8 @@ public class ForeGroundActivity extends AppCompatActivity implements PhotoCropVi
         Gson gson=new Gson();
         try {
             PhotoCrop photoCrop=gson.fromJson(jsonData,PhotoCrop.class);
-            resultString="http://10.108.125.20:8900/flaskr2/"+photoCrop.getResult();
+            imageId=photoCrop.getResult();
+            resultString="http://10.108.125.20:8900/flaskr2/"+imageId;
             imageUri= Uri.parse(resultString);
             imageURL=new URL(resultString);
             bmpPath=imageUri.getPath();
