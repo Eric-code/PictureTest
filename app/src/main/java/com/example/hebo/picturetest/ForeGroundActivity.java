@@ -168,7 +168,7 @@ public class ForeGroundActivity extends AppCompatActivity implements PhotoCropVi
             public void onClick(View v) {
                 if (floatingbtn){//截取图片
                     if (albumorcamera==1){
-                        //progressDialog.show();
+                        progressDialog.show();
                         mode=Calculate.ShowMode(baseBitmap,viewWidth,viewHeight);
                         relativeX= Calculate.RelativeStartX(baseBitmap,mode,sX,viewWidth,viewHeight);
                         relativeY= Calculate.RelativeStartY(baseBitmap,mode,sY,viewWidth,viewHeight);
@@ -219,6 +219,7 @@ public class ForeGroundActivity extends AppCompatActivity implements PhotoCropVi
 
                 }else {//手绘图片
                     if (!canvasEmpty){
+                        progressDialog.show();
                         picSave(baseBitmap,"forepicture.bmp");
                         String base64Draw=ImageUtil.bitmapToString(bmpPath);
                         Log.e(TAG,"press"+base64Draw);
@@ -275,6 +276,7 @@ public class ForeGroundActivity extends AppCompatActivity implements PhotoCropVi
                         recyclerView.setLayoutManager(layoutManager);
                         PicAdapter adapter=new PicAdapter(picList);
                         recyclerView.setAdapter(adapter);
+                        progressDialog.dismiss();
                         Log.e(TAG,"图形绘制");
                         break;
                     default:

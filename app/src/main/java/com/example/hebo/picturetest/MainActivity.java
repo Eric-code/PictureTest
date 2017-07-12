@@ -91,7 +91,6 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
     double nLenStart = 0;//双指之间几何距离
     float preLen=0;
     float nowLen=0;
-    boolean singleTouch=true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -215,6 +214,7 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
                     case BACK_PIC_CLICK://获取从背景界面搜索得到的图
                         imagePath=BackGroundActivity.bmpPath;
                         backBitmap=BitmapFactory.decodeFile(imagePath);
+                        base64BackString=ImageUtil.bitmapToString(imagePath);//获取base64算法压缩之后的背景图字符串
                         back_picture.setWillNotDraw(false);
                         back_picture.setImageBitmap(backBitmap);
                         showMode=Calculate.ShowMode(backBitmap,viewWidth,viewHeight);
@@ -320,11 +320,20 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
                 progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
                 progressDialog.setIndeterminate(false);//不显示进度条
                 progressDialog.show();*/
+                for (int i=0;i<fore_picture_num;i++){
+                    int x=Integer.parseInt(imageDatasX[i]);
+                    int y=Integer.parseInt(imageDatasY[i]);
+                    int width=Integer.parseInt(imageDatasWidth[i]);
+                    int height=Integer.parseInt(imageDatasHeight[i]);
+                    if ((x<0)||(y<0)||((x+width)>backBitmap.getWidth())||(y+height)>backBitmap.getHeight()){
+                        new  AlertDialog.Builder(MainActivity.this).setTitle("错误！").setMessage("前景图位置超出制定范围!").setPositiveButton("确定",null).show();
+                    }
+                }
                 getToString(fore_picture_num);
                 String imageData=getToLastString(imageDatas,fore_picture_num);
                 Log.e(TAG, "融合:"+imageData);
                 if (base64BackString==null){//背景图片为空
-                    new  AlertDialog.Builder(MainActivity.this).setTitle("错误！").setMessage("背景不能为空!").setPositiveButton("确定",null).show();
+                    new  AlertDialog.Builder(MainActivity.this).setTitle("错误！").setMessage("背景图片不能为空!").setPositiveButton("确定",null).show();
                 }else {
                     RequestBody requestBody=new FormBody.Builder()
                             .add("value",base64BackString)
@@ -424,7 +433,10 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
                     preLen=(float) Math.sqrt(xlen*xlen +  ylen * ylen);
                     break;
                 case MotionEvent.ACTION_UP:
-                    singleTouch=false;
+                    imageViewLeft[v.getId()] = v.getLeft();
+                    imageViewRight[v.getId()] = v.getRight();
+                    imageViewTop[v.getId()] = v.getTop();
+                    imageViewBottom[v.getId()] = v.getBottom();
                     imageDatasX[v.getId()] = String.valueOf(Calculate.RelativeStartX(backBitmap, showMode, v.getLeft(), viewWidth, viewHeight));
                     imageDatasY[v.getId()] = String.valueOf(Calculate.RelativeStartY(backBitmap, showMode, v.getTop(), viewWidth, viewHeight));
                     imageDatasWidth[v.getId()] = String.valueOf(Calculate.RelativeWidth(backBitmap, showMode, v.getLeft(), v.getRight(), viewWidth, viewHeight));
@@ -432,7 +444,7 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
                     break;
             }
         }
-        if ((nCnt==1)&&singleTouch){
+        if ((nCnt==1)){
             switch (event.getAction()) {
                 case MotionEvent.ACTION_DOWN:
                     lastX = (int) event.getRawX();
@@ -461,6 +473,10 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
                     lastY = (int) event.getRawY();
                     break;
                 case MotionEvent.ACTION_UP:
+                    imageViewLeft[v.getId()] = v.getLeft();
+                    imageViewRight[v.getId()] = v.getRight();
+                    imageViewTop[v.getId()] = v.getTop();
+                    imageViewBottom[v.getId()] = v.getBottom();
                     imageDatasX[v.getId()] = String.valueOf(Calculate.RelativeStartX(backBitmap, showMode, imageViewLeft[v.getId()], viewWidth, viewHeight));
                     imageDatasY[v.getId()] = String.valueOf(Calculate.RelativeStartY(backBitmap, showMode, imageViewTop[v.getId()], viewWidth, viewHeight));
                     imageDatasWidth[v.getId()] = String.valueOf(Calculate.RelativeWidth(backBitmap, showMode, imageViewLeft[v.getId()], imageViewRight[v.getId()], viewWidth, viewHeight));

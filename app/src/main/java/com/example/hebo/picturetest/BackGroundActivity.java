@@ -1,5 +1,6 @@
 package com.example.hebo.picturetest;
 
+import android.app.ProgressDialog;
 import android.content.ContentUris;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -81,6 +82,7 @@ public class BackGroundActivity extends AppCompatActivity implements PhotoCropVi
     //private ListView mListView;
     ArrayAdapter<String>adapter;
     private boolean picListEmpty=true;
+    public ProgressDialog progressDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -95,16 +97,20 @@ public class BackGroundActivity extends AppCompatActivity implements PhotoCropVi
             actionBar.setDisplayHomeAsUpEnabled(true);
         }
 
+        //配置进度等待框
+        /*progressDialog=new ProgressDialog(BackGroundActivity.this);
+        progressDialog.setTitle("任务正在执行中");
+        progressDialog.setMessage("任务正在执行中，请等待……");
+        progressDialog.setCancelable(true);
+        progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+        progressDialog.setIndeterminate(false);//不显示进度条*/
         /*PhotoCropView mCropView = (PhotoCropView)findViewById(R.id.test);
         mCropView.setLocationListener(this);
         ImageView imageView=(ImageView)findViewById(R.id.back_iamge);
         imageView.setImageResource(R.drawable.nav_icon);*/
 
         //搜索框下部检索提示信息显示
-        //mListView=(ListView)findViewById(R.id.listView);
         adapter=new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, mStrs);
-        //mListView.setAdapter(adapter);
-        //mListView.setTextFilterEnabled(true);//过滤数据属性
         mSearchView = (SearchView) findViewById(R.id.searchView);
         mSearchView.onActionViewExpanded();// 写上此句后searchView初始是可以点击输入的状态
         mSearchView.setIconifiedByDefault(false);//默认不自动缩小成图标
@@ -115,6 +121,7 @@ public class BackGroundActivity extends AppCompatActivity implements PhotoCropVi
             // 当点击搜索按钮时触发该方法
             @Override
             public boolean onQueryTextSubmit(String query) {
+                //progressDialog.show();
                 //发送网络请求
                 RequestBody requestBody=new FormBody.Builder()
                         .add("queryexpression",query)//提交的请求
@@ -265,7 +272,6 @@ public class BackGroundActivity extends AppCompatActivity implements PhotoCropVi
             result1=photo.getResult1();
             imageURL=new URL(result1[0]);
             imagePath=imageURL.getPath();
-            Log.e(TAG,0+"result[j]:"+result1[33]);
             Log.e(TAG,1+"result[j]:"+result1[1]);
             Log.e(TAG,2+"result[j]:"+result1[2]);
             upDatePic();
@@ -287,6 +293,7 @@ public class BackGroundActivity extends AppCompatActivity implements PhotoCropVi
                     }
                     picList.add(i,pic);
                 }
+                Log.e(TAG,0+"照片更新");
                 picListEmpty=false;
                 Message message=new Message();
                 message.what=UPDATE_BMP;
