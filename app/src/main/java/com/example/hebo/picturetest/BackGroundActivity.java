@@ -95,12 +95,12 @@ public class BackGroundActivity extends AppCompatActivity implements PhotoCropVi
         }
 
         //配置进度等待框
-        /*progressDialog=new ProgressDialog(BackGroundActivity.this);
+        progressDialog=new ProgressDialog(BackGroundActivity.this);
         progressDialog.setTitle("任务正在执行中");
         progressDialog.setMessage("任务正在执行中，请等待……");
         progressDialog.setCancelable(true);
         progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-        progressDialog.setIndeterminate(false);//不显示进度条*/
+        progressDialog.setIndeterminate(false);//不显示进度条
         /*PhotoCropView mCropView = (PhotoCropView)findViewById(R.id.test);
         mCropView.setLocationListener(this);
         ImageView imageView=(ImageView)findViewById(R.id.back_iamge);
@@ -118,7 +118,7 @@ public class BackGroundActivity extends AppCompatActivity implements PhotoCropVi
             // 当点击搜索按钮时触发该方法
             @Override
             public boolean onQueryTextSubmit(String query) {
-                //progressDialog.show();
+                progressDialog.show();
                 //发送网络请求
                 RequestBody requestBody=new FormBody.Builder()
                         .add("queryexpression",query)//提交的请求
@@ -144,11 +144,9 @@ public class BackGroundActivity extends AppCompatActivity implements PhotoCropVi
                 if (!TextUtils.isEmpty(newText)){
                     adapter.getFilter().filter(newText.toString());
                     //mListView.setFilterText(newText);
-                    //Toast.makeText(BackGroundActivity.this,"搜索成功",Toast.LENGTH_SHORT).show();
                 }else{
                     adapter.getFilter().filter("");
                     //mListView.clearTextFilter();
-                    //Toast.makeText(BackGroundActivity.this,"搜索内容为空",Toast.LENGTH_SHORT).show();
                 }
                 return false;
             }
@@ -169,6 +167,7 @@ public class BackGroundActivity extends AppCompatActivity implements PhotoCropVi
                         break;
                     case BACK_PIC_CLICK:
                         final int clickNum=msg.arg1;//点击的缩略图序列号
+                        progressDialog.show();
                         new Thread(new Runnable() {
                             @Override
                             public void run() {
@@ -185,12 +184,13 @@ public class BackGroundActivity extends AppCompatActivity implements PhotoCropVi
                                     bitmap3.compress(Bitmap.CompressFormat.PNG, 90, out);
                                     out.flush();
                                     out.close();
-                                    Log.i(TAG, "已经保存");
+                                    Log.i(TAG, "保存");
                                 } catch (FileNotFoundException e) {
                                     e.printStackTrace();
                                 } catch (IOException e) {
                                     e.printStackTrace();
                                 }
+                                progressDialog.dismiss();
                                 Uri uri=Uri.fromFile(f);
                                 bmpPath=uri.getPath();
                                 Message message=new Message();
@@ -292,6 +292,7 @@ public class BackGroundActivity extends AppCompatActivity implements PhotoCropVi
                     }
                     picList.add(i,pic);
                 }
+                progressDialog.dismiss();
                 Log.e(TAG,0+"照片更新");
                 picListEmpty=false;
                 Message message=new Message();

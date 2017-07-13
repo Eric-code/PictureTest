@@ -33,6 +33,10 @@ import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import com.example.hebo.picturetest.ForeAcivitity.Fore0Activity;
+import com.example.hebo.picturetest.ForeAcivitity.Fore1Activity;
+import com.example.hebo.picturetest.ForeAcivitity.Fore2Activity;
+import com.example.hebo.picturetest.ForeAcivitity.Fore3Activity;
+import com.example.hebo.picturetest.ForeAcivitity.Fore4Activity;
 import com.example.hebo.picturetest.JSON.HttpUtil;
 import com.example.hebo.picturetest.JSON.PhotoCrop;
 import com.example.hebo.picturetest.image.Calculate;
@@ -99,7 +103,6 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         final ViewGroup r = (ViewGroup)findViewById (R.id.viewGroup);
-        PublicWay.activityList.add(this); // 把这个界面添加到activityList集合里面
 
         back_picture=(ImageView)findViewById(R.id.back_picture);
         back_picture.setDrawingCacheEnabled(true);//启动缓存
@@ -133,25 +136,72 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
                 //item.setCheckable(true);//设置选项可选
                 switch (item.getItemId()){
                     case R.id.backgroundpicture:
-                        Log.e(TAG, "显示背景图片+"+item.getItemId());
-                        Intent back_intent=new Intent(MainActivity.this,BackGroundActivity.class);
-                        startActivity(back_intent);
-                        item.setCheckable(false);//设置选项不可选
-                        item.setChecked(true);
+                        if (base64BackString=="123456"){
+                            new  AlertDialog.Builder(MainActivity.this).setTitle("警告").setMessage("请先选择背景图片").setPositiveButton("确定",null).show();
+                        }else {
+                            Log.e(TAG, "显示背景图片+" + item.getItemId());
+                            Intent back_intent = new Intent(MainActivity.this, BackGroundActivity.class);
+                            startActivity(back_intent);
+                            item.setCheckable(false);//设置选项不可选
+                            item.setChecked(true);
+                        }
                         break;
                     case R.id.foregroundpicture+1:
-
-                        Log.e(TAG,"前景界面1");
-                        Intent fore_intent1=new Intent(MainActivity.this,Fore0Activity.class);
-                        startActivity(fore_intent1);
+                        if (base64BackString=="123456"){
+                            new  AlertDialog.Builder(MainActivity.this).setTitle("警告").setMessage("请先选择背景图片").setPositiveButton("确定",null).show();
+                        }else {
+                            Log.e(TAG, "前景界面1");
+                            Intent fore_intent1 = new Intent(MainActivity.this, Fore0Activity.class);
+                            startActivity(fore_intent1);
+                            item.setCheckable(false);//设置选项不可选
+                            item.setChecked(true);
+                        }
+                        break;
+                    case R.id.foregroundpicture+2:
+                        if (base64BackString=="123456"){
+                            new  AlertDialog.Builder(MainActivity.this).setTitle("警告").setMessage("请先选择背景图片").setPositiveButton("确定",null).show();
+                        }else {
+                            Log.e(TAG, "前景界面2");
+                            Intent fore_intent2 = new Intent(MainActivity.this, Fore1Activity.class);
+                            startActivity(fore_intent2);
+                            item.setCheckable(false);//设置选项不可选
+                            item.setChecked(true);
+                        }
+                        break;
+                    case R.id.foregroundpicture+3:
+                        if (base64BackString=="123456"){
+                        new  AlertDialog.Builder(MainActivity.this).setTitle("警告").setMessage("请先选择背景图片").setPositiveButton("确定",null).show();
+                    }else {
+                            Log.e(TAG, "前景界面3");
+                            Intent fore_intent3 = new Intent(MainActivity.this, Fore2Activity.class);
+                            startActivity(fore_intent3);
+                            item.setCheckable(false);//设置选项不可选
+                            item.setChecked(true);
+                        }
+                        break;
+                    case R.id.foregroundpicture+4:
+                        if (base64BackString=="123456"){
+                        new  AlertDialog.Builder(MainActivity.this).setTitle("警告").setMessage("请先选择背景图片").setPositiveButton("确定",null).show();
+                    }else {
+                        Log.e(TAG, "前景界面4");
+                        Intent fore_intent4 = new Intent(MainActivity.this, Fore3Activity.class);
+                        startActivity(fore_intent4);
                         item.setCheckable(false);//设置选项不可选
                         item.setChecked(true);
+                    }
+                        break;
+                    case R.id.foregroundpicture+5:
+                        if (base64BackString=="123456"){
+                            new  AlertDialog.Builder(MainActivity.this).setTitle("警告").setMessage("请先选择背景图片").setPositiveButton("确定",null).show();
+                        }else{
+                        Log.e(TAG,"前景界面5");
+                        Intent fore_intent5=new Intent(MainActivity.this,Fore4Activity.class);
+                        startActivity(fore_intent5);
+                        item.setCheckable(false);//设置选项不可选
+                        item.setChecked(true);
+                        }
                         break;
                     case R.id.foregroundpicture:
-                    case R.id.foregroundpicture+2:
-                    case R.id.foregroundpicture+3:
-                    case R.id.foregroundpicture+4:
-                    case R.id.foregroundpicture+5:
                     case R.id.foregroundpicture+6:
                     case R.id.foregroundpicture+7:
                     case R.id.foregroundpicture+8:
@@ -192,7 +242,30 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
             public void onClick(View v) {
                 if (fore_picture_item_num>0){
                     navigationView.getMenu().removeItem(R.id.foregroundpicture+fore_picture_item_num);
+                    switch (fore_picture_num){
+                        case 1:
+                            ForeGroundActivity.instance.finish();
+                            break;
+                        case 2:
+                            Fore0Activity.instance.finish();
+                            break;
+                        case 3:
+                            Fore1Activity.instance.finish();
+                            break;
+                        case 4:
+                            Fore2Activity.instance.finish();
+                            break;
+                        case 5:
+                            Fore3Activity.instance.finish();
+                            break;
+                        case 6:
+                            Fore4Activity.instance.finish();
+                            break;
+                        default:
+                            break;
+                    }
                     if (imageViews[fore_picture_item_num]!=null){
+                        fore_picture_num--;
                         imageViews[fore_picture_item_num].setWillNotDraw(true);
                     }
                     fore_picture_item_num--;
@@ -209,6 +282,7 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
                         PublicWay.activityList.get(i).finish();
                     }
                 }
+                finish();
                 System.exit(0);
             }
         });
@@ -224,12 +298,6 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
                         back_picture.setImageBitmap(backBitmap);
                         showMode=4;
                         Log.e(TAG,"消息收到+"+imageUri);
-                        /*try {
-                            //imageUri=BackGroundActivity.imageUri;
-                            //Bitmap bitmap= BitmapFactory.decodeStream(getContentResolver().openInputStream(imageUri));
-                        }catch (FileNotFoundException e){
-                            e.printStackTrace();
-                        }*/
                         break;
                     case CHOOSE_PHOTO_MSG://接收到背景界面从相册得到的图片
                         imagePath=BackGroundActivity.imagePath;
@@ -320,7 +388,12 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
                     dialog.dismiss();
-                    ForeGroundActivity.instance.finish();
+                    for (int i = 0; i < PublicWay.activityList.size(); i++) {
+                        if (null != PublicWay.activityList.get(i)) {
+                            // 关闭存放在activityList集合里面的所有activity
+                            PublicWay.activityList.get(i).finish();
+                        }
+                    }
                     back_picture.setWillNotDraw(true);
                     base64BackString="123456";
                     //清除imageView中的图片
@@ -500,6 +573,7 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
             bmpPath=imageUri.getPath();
             cropBitmap=HttpUtil.returnBitMap(resultString);*/
             Log.e(TAG,"融合图:"+resultString);
+            progressDialog.dismiss();
             Intent lastintent=new Intent(MainActivity.this,LastActivity.class);
             lastintent.putExtra("result",resultString);
             startActivity(lastintent);

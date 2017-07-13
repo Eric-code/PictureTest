@@ -13,7 +13,8 @@
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".MainActivity"
+        <activity
+            android:name=".MainActivity"
             android:launchMode="singleTask">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -21,8 +22,9 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".BackGroundActivity"
-            android:launchMode="singleInstance"/>
+        <activity
+            android:name=".BackGroundActivity"
+            android:launchMode="singleInstance" />
 
         <provider
             android:name="android.support.v4.content.FileProvider"
@@ -34,12 +36,23 @@
                 android:resource="@xml/file_paths" />
         </provider>
 
-        <activity android:name=".ForeGroundActivity"
+        <activity
+            android:name=".ForeGroundActivity"
+            android:launchMode="singleInstance" />
+        <activity
+            android:name=".ForeAcivitity.Fore0Activity"
+            android:launchMode="singleInstance" />
+        <activity android:name=".LastActivity"
+            android:launchMode="singleTop" />
+        <activity android:name=".ForeCropActivity" />
+        <activity android:name=".ForeAcivitity.Fore1Activity"
             android:launchMode="singleInstance"/>
-        <activity android:name=".ForeAcivitity.Fore0Activity"
+        <activity android:name=".ForeAcivitity.Fore2Activity"
             android:launchMode="singleInstance"/>
-        <activity android:name=".LastActivity" />
-        <activity android:name=".ForeCropActivity"></activity>
+        <activity android:name=".ForeAcivitity.Fore3Activity"
+            android:launchMode="singleInstance"/>
+        <activity android:name=".ForeAcivitity.Fore4Activity"
+            android:launchMode="singleInstance"/>
     </application>
 
 </manifest>
