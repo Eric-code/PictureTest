@@ -11,6 +11,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.hebo.picturetest.BackGroundActivity;
+import com.example.hebo.picturetest.ForeGroundActivity;
 import com.example.hebo.picturetest.MainActivity;
 import com.example.hebo.picturetest.R;
 
@@ -23,6 +24,7 @@ public class PicAdapter extends RecyclerView.Adapter<PicAdapter.ViewHolder>{
     private List<Pic> mPicList;
     private Handler handler=new Handler();
     private static final int BACK_PIC_CLICK=0x456;
+    public static boolean BackOrFore=true;//判断此时RecyclerView中显示的是背景还是前景图片，默认为背景图片
 
     static class ViewHolder extends RecyclerView.ViewHolder {
         View picView;
@@ -43,14 +45,14 @@ public class PicAdapter extends RecyclerView.Adapter<PicAdapter.ViewHolder>{
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.picture_item, parent, false);
         final ViewHolder holder = new ViewHolder(view);
-        holder.picView.setOnClickListener(new View.OnClickListener() {
+        /*holder.picView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 int position = holder.getAdapterPosition();
                 Pic pic = mPicList.get(position);
                 Toast.makeText(v.getContext(), "you clicked view " , Toast.LENGTH_SHORT).show();
             }
-        });
+        });*/
         holder.picImage.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -63,7 +65,11 @@ public class PicAdapter extends RecyclerView.Adapter<PicAdapter.ViewHolder>{
                         Message message=new Message();
                         message.what=BACK_PIC_CLICK;
                         message.arg1=position;
-                        handler= BackGroundActivity.handler;
+                        if (BackOrFore){
+                            handler= BackGroundActivity.handler;
+                        }else {
+                            handler= ForeGroundActivity.forehandler;
+                        }
                         handler.sendMessage(message);
                     }
                 }).start();

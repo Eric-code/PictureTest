@@ -34,7 +34,8 @@
 
         <activity android:name=".ForeGroundActivity" />
         <activity android:name=".ForeAcivitity.Fore0Activity" />
-        <activity android:name=".LastActivity"></activity>
+        <activity android:name=".LastActivity" />
+        <activity android:name=".ForeCropActivity"></activity>
     </application>
 
 </manifest>

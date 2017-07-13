@@ -163,6 +163,7 @@ public class BackGroundActivity extends AppCompatActivity implements PhotoCropVi
             public void handleMessage(Message msg){
                 switch (msg.what){
                     case UPDATE_BMP:
+                        PicAdapter.BackOrFore=true;
                         RecyclerView recyclerView = (RecyclerView) findViewById(R.id.recycler_view);
                         StaggeredGridLayoutManager layoutManager = new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL);
                         recyclerView.setLayoutManager(layoutManager);

@@ -38,6 +38,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.Toast;
@@ -77,12 +78,14 @@ public class ForeGroundActivity extends AppCompatActivity implements PhotoCropVi
     public static final int CHOOSE_PHOTO=2;//图库中选择照片
     public static final int EMPTY_ESTIMATE=3;//图片非空判断，防止重新剪裁时报错
     public static final int CROP_PHOTO_MSG=0x345;
+    public static final int RECYCLER_CLICK=0x456;
+    public static final int CROP_SHOW=0x789;
     public static final int UPDATE_BMP=0x12;
     public static final int CHANGE_UI=0x23;
     public static String bmpPath=null;
-    public static String[] result;
+    public static String[] result,result1;
     public static String resultString;
-    public Handler forehandler=new Handler();
+    public static Handler forehandler=new Handler();
     public ImageView picture;
     public RecyclerView recyclerView;
     public Button popButton;
@@ -104,6 +107,8 @@ public class ForeGroundActivity extends AppCompatActivity implements PhotoCropVi
     public int mode,relativeX,relativeY,relativeWidth,relativeHeight;
     public ProgressDialog progressDialog;
     public int albumorcamera=1;
+    public boolean SearchOrDraw=true;//判断图片来自搜索还是手绘，默认来自搜索
+    public String actualURL;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -138,13 +143,32 @@ public class ForeGroundActivity extends AppCompatActivity implements PhotoCropVi
 
 
 
-        mSearchView = (SearchView) findViewById(R.id.searchView1);
+        mSearchView = (SearchView) findViewById(R.id.searchView1);//搜索框下部检索提示信息显示
         mSearchView.onActionViewExpanded();// 写上此句后searchView初始是可以点击输入的状态
         // 设置搜索文本监听
         mSearchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             // 当点击搜索按钮时触发该方法
             @Override
             public boolean onQueryTextSubmit(String query) {
+                //progressDialog.show();
+                PicAdapter.BackOrFore=false;
+                //发送网络请求
+                RequestBody requestBody=new FormBody.Builder()
+                        .add("queryexpression",query)//提交的请求
+                        .build();
+                HttpUtil.sendOkHttpRequest("http://10.108.125.20:8900/flaskr2/resAndroid",requestBody,new Callback(){
+                    //得到服务器返回的具体内容
+                    @Override
+                    public void onResponse(Call call, Response response) throws IOException {
+                        String responseData=response.body().string();
+                        parseJSONWithGSONPhoto(responseData);
+                    }
+                    //对异常情况进行处理
+                    @Override
+                    public void onFailure(Call call, IOException e) {
+                        //Toast.makeText(BackGroundActivity.this, "图片加载失败", Toast.LENGTH_SHORT).show();
+                    }
+                });
                 return false;
             }
             // 当搜索内容改变时触发该方法
@@ -152,10 +176,10 @@ public class ForeGroundActivity extends AppCompatActivity implements PhotoCropVi
             public boolean onQueryTextChange(String newText) {
                 if (!TextUtils.isEmpty(newText)){
                     //mListView.setFilterText(newText);
-                    Toast.makeText(ForeGroundActivity.this,"搜索成功",Toast.LENGTH_SHORT).show();
+                    //Toast.makeText(BackGroundActivity.this,"搜索成功",Toast.LENGTH_SHORT).show();
                 }else{
                     //mListView.clearTextFilter();
-                    Toast.makeText(ForeGroundActivity.this,"搜索内容为空",Toast.LENGTH_SHORT).show();
+                    //Toast.makeText(BackGroundActivity.this,"搜索内容为空",Toast.LENGTH_SHORT).show();
                 }
                 return false;
             }
@@ -218,6 +242,7 @@ public class ForeGroundActivity extends AppCompatActivity implements PhotoCropVi
                     });
 
                 }else {//手绘图片
+                    PicAdapter.BackOrFore=false;
                     if (!canvasEmpty){
                         progressDialog.show();
                         picSave(baseBitmap,"forepicture.bmp");
@@ -278,6 +303,48 @@ public class ForeGroundActivity extends AppCompatActivity implements PhotoCropVi
                         recyclerView.setAdapter(adapter);
                         progressDialog.dismiss();
                         Log.e(TAG,"图形绘制");
+                        break;
+                    case RECYCLER_CLICK:
+                        final int clickNum=msg.arg1;//点击的缩略图序列号
+                        new Thread(new Runnable() {
+                            @Override
+                            public void run() {
+                                if (SearchOrDraw){
+                                    actualURL=result1[clickNum];
+                                }else {
+                                    actualURL="http://10.108.125.20:8900/flaskr2/static/Imgs/"+result[clickNum];
+                                }
+                                Bitmap bitmap3= HttpUtil.returnBitMap(actualURL);
+                                Log.e(TAG,"position:"+clickNum);
+                                Log.e(TAG,"result:"+result[clickNum]);
+                                //把获得的图片保存到本地并将路径传输到主界面中
+                                File f = new File("/sdcard/"+"backpicture.png");
+                                if (f.exists()) {
+                                    f.delete();
+                                }
+                                try {
+                                    FileOutputStream out = new FileOutputStream(f);
+                                    bitmap3.compress(Bitmap.CompressFormat.PNG, 90, out);
+                                    out.flush();
+                                    out.close();
+                                    Log.i(TAG, "已经保存");
+                                } catch (FileNotFoundException e) {
+                                    e.printStackTrace();
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
+                                Uri uri=Uri.fromFile(f);
+                                bmpPath=uri.getPath();
+                                /*Message message=new Message();
+                                message.what=CROP_SHOW;
+                                forehandler=ForeCropActivity.foreCropHandler;
+                                forehandler.sendMessage(message);*/
+                                Intent intent=new Intent(ForeGroundActivity.this,ForeCropActivity.class);
+                                intent.putExtra("bmpPath",bmpPath);
+                                startActivity(intent);
+                                finish();
+                            }
+                        }).start();
                         break;
                     default:
                         break;
@@ -407,6 +474,47 @@ public class ForeGroundActivity extends AppCompatActivity implements PhotoCropVi
     }
 
     //处理网络数据
+    private void parseJSONWithGSONPhoto(String jsonData){
+        Gson gson=new Gson();
+        try {
+            Photo photo=gson.fromJson(jsonData,Photo.class);
+            Log.e(TAG,"原图:");
+            Log.e(TAG,"缩略图:");
+            result=photo.getResult();
+            result1=photo.getResult1();
+            imageURL=new URL(result1[0]);
+            imagePath=imageURL.getPath();
+            Log.e(TAG,1+"result[j]:"+result1[1]);
+            Log.e(TAG,2+"result[j]:"+result1[2]);
+            SearchOrDraw=true;
+            upDatePhoto();
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    private void upDatePhoto(){
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                for (int i=0;i<result1.length;i++){
+                    //Bitmap bitmap=BitmapFactory.decodeResource(BackGroundActivity.this.getResources(), R.drawable.apple);
+                    Bitmap bitmap=HttpUtil.returnBitMap(result1[i]);
+                    Pic pic=new Pic(bitmap);
+                    if (!picListEmpty){//判断之前照片列表中是否有之前搜索产生的图片
+                        picList.remove(i);
+                    }
+                    picList.add(i,pic);
+                }
+                Log.e(TAG,0+"照片更新");
+                picListEmpty=false;
+                Message message=new Message();
+                message.what=UPDATE_BMP;
+                forehandler.sendMessage(message);
+            }
+        }).start();
+    }
+
     public void parseJSONWithGSON(String jsonData){
         Gson gson=new Gson();
         try {
@@ -418,6 +526,7 @@ public class ForeGroundActivity extends AppCompatActivity implements PhotoCropVi
             Log.e(TAG,0+"result[j]:"+result[0]);
             Log.e(TAG,1+"result[j]:"+result[1]);
             Log.e(TAG,2+"result[j]:"+result[2]);
+            SearchOrDraw=false;
             upDatePic();
         }catch (Exception e){
             e.printStackTrace();
@@ -425,6 +534,7 @@ public class ForeGroundActivity extends AppCompatActivity implements PhotoCropVi
     }
 
     public void parseJSONWithGSONCrop(String jsonData){
+        MainActivity.forePhotoFrom=true;
         Gson gson=new Gson();
         try {
             PhotoCrop photoCrop=gson.fromJson(jsonData,PhotoCrop.class);

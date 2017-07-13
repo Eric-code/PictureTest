@@ -3,6 +3,7 @@ package com.example.hebo.picturetest;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
@@ -60,6 +61,7 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
     public static final int CHOOSE_PHOTO_MSG=0x234;
     public static final int CROP_PHOTO_MSG=0x345;
     public static final int BACK_PIC_CLICK=0x567;
+    public static boolean forePhotoFrom=true;//默认前景裁剪图片来自本地，为false表示来自网络的图片
     private DrawerLayout mdrawerLayout;//滑动菜单
     public ImageView back_picture,fore_picture;
     int fore_picture_item_num=0;//前景图片选项的数目
@@ -113,6 +115,9 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
             actionBar.setHomeAsUpIndicator(R.drawable.ic_menu);
         }
 
+        /*Resources res=getResources();
+        backBitmap=BitmapFactory.decodeResource(res,R.drawable.init);*/
+
         navigationView=(NavigationView)findViewById(R.id.nav_view);//获取滑动菜单实例
         navigationView.setItemIconTintList(null);//设置每个图标为原来的颜色
         navigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
@@ -129,6 +134,7 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
                         item.setChecked(true);
                         break;
                     case R.id.foregroundpicture+1:
+
                         Log.e(TAG,"前景界面1");
                         Intent fore_intent1=new Intent(MainActivity.this,Fore0Activity.class);
                         startActivity(fore_intent1);
@@ -145,11 +151,15 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
                     case R.id.foregroundpicture+8:
                     case R.id.foregroundpicture+9:
                     case R.id.foregroundpicture+10:
-                        Intent fore_intent=new Intent(MainActivity.this,ForeGroundActivity.class);
-                        startActivity(fore_intent);
-                        item.setCheckable(false);//设置选项不可选
-                        item.setChecked(true);
-                        //item.setEnabled(false);
+                        if (base64BackString=="123456"){
+                            new  AlertDialog.Builder(MainActivity.this).setTitle("警告").setMessage("请先选择背景图片").setPositiveButton("确定",null).show();
+                        }else{
+                            Intent fore_intent=new Intent(MainActivity.this,ForeGroundActivity.class);
+                            startActivity(fore_intent);
+                            item.setCheckable(false);//设置选项不可选
+                            item.setChecked(true);
+                            //item.setEnabled(false);
+                        }
                         break;
                     default:
                 }
@@ -221,7 +231,18 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
                         Log.e(TAG,"大图绘制成功");
                         break;
                     case CROP_PHOTO_MSG://接收到前景界面裁剪之后的图片
-                        imagePath=ForeGroundActivity.bmpPath;
+                        String str=null;
+                        str=ForeCropActivity.imageId;
+                        imagePath=ForeCropActivity.bmpPath;
+                        /*if (forePhotoFrom){
+                            str=ForeGroundActivity.imageId;//记录图片id,只选取其中的数字标识符
+                            imagePath=ForeGroundActivity.bmpPath;
+                            Log.e(TAG,"来自前景界面"+imagePath);
+                        }else {
+                            str=ForeCropActivity.imageId;
+                            imagePath=ForeCropActivity.bmpPath;
+                            Log.e(TAG,"来自前景剪裁界面"+imagePath);
+                        }*/
                         Bitmap bitmap2 =BitmapFactory.decodeFile(imagePath) ;
                         ImageView mImageView = new ImageView(MainActivity.this);
                         imageViews[fore_picture_num]=mImageView;
@@ -231,7 +252,6 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
                         mImageView.setWillNotDraw(false);
                         mImageView.setId(fore_picture_num);
                         mImageView.setOnTouchListener(MainActivity.this);
-                        String str=ForeGroundActivity.imageId;//记录图片id,只选取其中的数字标识符
                         str=str.trim();
                         String str2="";
                         if(str != null && !"".equals(str)) {
@@ -332,7 +352,7 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
                 getToString(fore_picture_num);
                 String imageData=getToLastString(imageDatas,fore_picture_num);
                 Log.e(TAG, "融合:"+imageData);
-                if (base64BackString==null){//背景图片为空
+                if (base64BackString=="123456"){//背景图片为空
                     new  AlertDialog.Builder(MainActivity.this).setTitle("错误！").setMessage("背景图片不能为空!").setPositiveButton("确定",null).show();
                 }else {
                     RequestBody requestBody=new FormBody.Builder()
