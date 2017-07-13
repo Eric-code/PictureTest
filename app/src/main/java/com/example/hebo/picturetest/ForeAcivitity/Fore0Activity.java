@@ -1,5 +1,6 @@
 package com.example.hebo.picturetest.ForeAcivitity;
 
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
@@ -35,16 +36,20 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import com.example.hebo.picturetest.ForeCropActivity;
 import com.example.hebo.picturetest.ForeGroundActivity;
 import com.example.hebo.picturetest.JSON.HttpUtil;
 import com.example.hebo.picturetest.MainActivity;
 import com.example.hebo.picturetest.PhotoCropView;
+import com.example.hebo.picturetest.PublicWay;
 import com.example.hebo.picturetest.R;
 import com.example.hebo.picturetest.image.Calculate;
 import com.example.hebo.picturetest.image.ImageUtil;
 import com.example.hebo.picturetest.recyclerView.PicAdapter;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 
 import okhttp3.Call;
@@ -54,11 +59,22 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 
 public class Fore0Activity extends ForeGroundActivity {
+    public static Fore0Activity instance = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_fore_ground);
+        instance = this;//用来在主界面中关闭本活动
+        PublicWay.activityList.add(this); // 把这个界面添加到activityList集合里面
+
+        //配置进度等待框
+        progressDialog=new ProgressDialog(Fore0Activity.this);
+        progressDialog.setTitle("任务正在执行中");
+        progressDialog.setMessage("任务正在执行中，请等待……");
+        progressDialog.setCancelable(true);
+        progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+        progressDialog.setIndeterminate(false);//不显示进度条
 
         mCropView = (PhotoCropView)findViewById(R.id.crop);
         mCropView.setLocationListener(this);
@@ -78,13 +94,34 @@ public class Fore0Activity extends ForeGroundActivity {
             actionBar.setDisplayHomeAsUpEnabled(true);
         }
 
-        mSearchView = (SearchView) findViewById(R.id.searchView1);
+
+
+        mSearchView = (SearchView) findViewById(R.id.searchView1);//搜索框下部检索提示信息显示
         mSearchView.onActionViewExpanded();// 写上此句后searchView初始是可以点击输入的状态
         // 设置搜索文本监听
         mSearchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             // 当点击搜索按钮时触发该方法
             @Override
             public boolean onQueryTextSubmit(String query) {
+                //progressDialog.show();
+                PicAdapter.BackOrFore=false;
+                //发送网络请求
+                RequestBody requestBody=new FormBody.Builder()
+                        .add("queryexpression",query)//提交的请求
+                        .build();
+                HttpUtil.sendOkHttpRequest("http://10.108.125.20:8900/flaskr2/resAndroid",requestBody,new Callback(){
+                    //得到服务器返回的具体内容
+                    @Override
+                    public void onResponse(Call call, Response response) throws IOException {
+                        String responseData=response.body().string();
+                        parseJSONWithGSONPhoto(responseData);
+                    }
+                    //对异常情况进行处理
+                    @Override
+                    public void onFailure(Call call, IOException e) {
+                        //Toast.makeText(BackGroundActivity.this, "图片加载失败", Toast.LENGTH_SHORT).show();
+                    }
+                });
                 return false;
             }
             // 当搜索内容改变时触发该方法
@@ -92,10 +129,10 @@ public class Fore0Activity extends ForeGroundActivity {
             public boolean onQueryTextChange(String newText) {
                 if (!TextUtils.isEmpty(newText)){
                     //mListView.setFilterText(newText);
-                    Toast.makeText(Fore0Activity.this,"搜索成功",Toast.LENGTH_SHORT).show();
+                    //Toast.makeText(BackGroundActivity.this,"搜索成功",Toast.LENGTH_SHORT).show();
                 }else{
                     //mListView.clearTextFilter();
-                    Toast.makeText(Fore0Activity.this,"搜索内容为空",Toast.LENGTH_SHORT).show();
+                    //Toast.makeText(BackGroundActivity.this,"搜索内容为空",Toast.LENGTH_SHORT).show();
                 }
                 return false;
             }
@@ -107,17 +144,24 @@ public class Fore0Activity extends ForeGroundActivity {
             @Override
             public void onClick(View v) {
                 if (floatingbtn){//截取图片
-                    MainActivity.saveBitmap(picture,"foreback");
-                    picSave(baseBitmap,"forepicture.bmp");
-                    String base64Crop= ImageUtil.bitmapToString(bmpPath);
-                    mode= Calculate.ShowMode(baseBitmap,viewWidth,viewHeight);
-                    relativeX= Calculate.RelativeStartX(baseBitmap,mode,sX,viewWidth,viewHeight);
-                    relativeY= Calculate.RelativeStartY(baseBitmap,mode,sY,viewWidth,viewHeight);
-                    relativeWidth=Calculate.RelativeWidth(baseBitmap,mode,sX,eX,viewWidth,viewHeight);
-                    relativeHeight=Calculate.RelativeHeight(baseBitmap,mode,sY,eY,viewWidth,viewHeight);
-                    Log.e(TAG,"模式："+mode+" 相对起点X："+relativeX+" 相对起点Y："+relativeY+" 相对宽度："+relativeWidth+" 相对高度："+relativeHeight);
-                    Log.e(TAG," 相对起点X："+String.valueOf(relativeX)+" 相对起点Y："+String.valueOf(relativeY)+" 相对宽度："+String.valueOf(relativeWidth)+" 相对高度："+relativeHeight);
-                    Log.e(TAG,"press"+base64Crop);
+                    if (albumorcamera==1){
+                        progressDialog.show();
+                        mode=Calculate.ShowMode(baseBitmap,viewWidth,viewHeight);
+                        relativeX= Calculate.RelativeStartX(baseBitmap,mode,sX,viewWidth,viewHeight);
+                        relativeY= Calculate.RelativeStartY(baseBitmap,mode,sY,viewWidth,viewHeight);
+                        relativeWidth=Calculate.RelativeWidth(baseBitmap,mode,sX,eX,viewWidth,viewHeight);
+                        relativeHeight=Calculate.RelativeHeight(baseBitmap,mode,sY,eY,viewWidth,viewHeight);
+                    }
+                    else{
+                        progressDialog.show();
+                        relativeX=(int)(sX*780/viewWidth);
+                        relativeY=(int)(sY*780/viewWidth);
+                        relativeWidth=(int)((eX-sX)*780/viewWidth);
+                        relativeHeight=(int)((eY-sY)*780/viewWidth);
+                    }
+                    String base64Crop=ImageUtil.bitmapToString(bmpPath);
+                    Log.e(TAG,"模式:"+mode+" 相对起点X："+relativeX+" 相对起点Y："+relativeY+" 相对宽度："+relativeWidth+" 相对高度："+relativeHeight);
+                    Log.e(TAG,base64Crop);
 
                     /*new Thread(new Runnable() {
                         @Override
@@ -152,7 +196,9 @@ public class Fore0Activity extends ForeGroundActivity {
                     });
 
                 }else {//手绘图片
+                    PicAdapter.BackOrFore=false;
                     if (!canvasEmpty){
+                        progressDialog.show();
                         picSave(baseBitmap,"forepicture.bmp");
                         String base64Draw=ImageUtil.bitmapToString(bmpPath);
                         Log.e(TAG,"press"+base64Draw);
@@ -187,7 +233,7 @@ public class Fore0Activity extends ForeGroundActivity {
                 if (floatingbtn){//截取图片
 
                 }else{
-                    canvas.drawColor(Color.rgb(245,245,245), PorterDuff.Mode.CLEAR);
+                    canvas.drawColor(Color.rgb(245,245,245),PorterDuff.Mode.CLEAR);
                     picture.setImageBitmap(baseBitmap);
                     canvasEmpty=true;
                 }
@@ -209,7 +255,50 @@ public class Fore0Activity extends ForeGroundActivity {
                         recyclerView.setLayoutManager(layoutManager);
                         PicAdapter adapter=new PicAdapter(picList);
                         recyclerView.setAdapter(adapter);
+                        progressDialog.dismiss();
                         Log.e(TAG,"图形绘制");
+                        break;
+                    case RECYCLER_CLICK:
+                        final int clickNum=msg.arg1;//点击的缩略图序列号
+                        new Thread(new Runnable() {
+                            @Override
+                            public void run() {
+                                if (SearchOrDraw){
+                                    actualURL=result1[clickNum];
+                                }else {
+                                    actualURL="http://10.108.125.20:8900/flaskr2/static/Imgs/"+result[clickNum];
+                                }
+                                Bitmap bitmap3= HttpUtil.returnBitMap(actualURL);
+                                Log.e(TAG,"position:"+clickNum);
+                                Log.e(TAG,"result:"+result[clickNum]);
+                                //把获得的图片保存到本地并将路径传输到主界面中
+                                File f = new File("/sdcard/"+"backpicture.png");
+                                if (f.exists()) {
+                                    f.delete();
+                                }
+                                try {
+                                    FileOutputStream out = new FileOutputStream(f);
+                                    bitmap3.compress(Bitmap.CompressFormat.PNG, 90, out);
+                                    out.flush();
+                                    out.close();
+                                    Log.i(TAG, "已经保存");
+                                } catch (FileNotFoundException e) {
+                                    e.printStackTrace();
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
+                                Uri uri=Uri.fromFile(f);
+                                bmpPath=uri.getPath();
+                                /*Message message=new Message();
+                                message.what=CROP_SHOW;
+                                forehandler=ForeCropActivity.foreCropHandler;
+                                forehandler.sendMessage(message);*/
+                                Intent intent=new Intent(Fore0Activity.this,ForeCropActivity.class);
+                                intent.putExtra("bmpPath",bmpPath);
+                                startActivity(intent);
+                                //finish();
+                            }
+                        }).start();
                         break;
                     default:
                         break;
@@ -228,13 +317,12 @@ public class Fore0Activity extends ForeGroundActivity {
             public boolean onMenuItemClick(MenuItem item) {
                 switch (item.getItemId()) {
                     case R.id.choose_from_album://从相册中选择照片
+                        albumorcamera=1;
                         floatingbtn=true;
                         recyclerView.setVisibility(View.GONE);
                         mSearchView.setVisibility(View.GONE);
                         popButton.setVisibility(View.GONE);
                         picture.setVisibility(View.VISIBLE);
-                        okButton.setVisibility(View.VISIBLE);
-                        quitButton.setVisibility(View.VISIBLE);
                         if (ContextCompat.checkSelfPermission(Fore0Activity.this, android.Manifest.permission.WRITE_EXTERNAL_STORAGE)!= PackageManager.PERMISSION_GRANTED){
                             ActivityCompat.requestPermissions(Fore0Activity.this,new String[]{android.Manifest.permission.WRITE_EXTERNAL_STORAGE},1);
                         }else {
@@ -242,13 +330,12 @@ public class Fore0Activity extends ForeGroundActivity {
                         }
                         break;
                     case R.id.takephotos://拍摄照片
+                        albumorcamera=2;
                         floatingbtn=true;
                         recyclerView.setVisibility(View.GONE);
                         mSearchView.setVisibility(View.GONE);
                         popButton.setVisibility(View.GONE);
                         picture.setVisibility(View.VISIBLE);
-                        okButton.setVisibility(View.VISIBLE);
-                        quitButton.setVisibility(View.VISIBLE);
                         //创建File对象，用于存储拍照后的图片,命名为outputimage.jpg,存放在SD卡应用关联缓存目录下
                         File outputImage = new File(getExternalCacheDir(),"output_image.jpg");
                         try {
@@ -262,7 +349,7 @@ public class Fore0Activity extends ForeGroundActivity {
                         if (Build.VERSION.SDK_INT>=24){//安卓版本不低于7.0
                             imageUri= FileProvider.getUriForFile(Fore0Activity.this,"com.example.hebo.picturetest.fileprovider",outputImage);
                         }else {
-                            imageUri= Uri.fromFile(outputImage);
+                            imageUri=Uri.fromFile(outputImage);
                         }
                         //启动相机程序
                         Intent intent=new Intent("android.media.action.IMAGE_CAPTURE");

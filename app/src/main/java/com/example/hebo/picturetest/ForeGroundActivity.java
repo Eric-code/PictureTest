@@ -68,6 +68,7 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 
 public class ForeGroundActivity extends AppCompatActivity implements PhotoCropView.onLocationListener{
+    public static ForeGroundActivity instance = null;
     public List<Pic> picList=new ArrayList<>();
     public SearchView mSearchView;
     public PopupMenu popupMenu;
@@ -114,6 +115,8 @@ public class ForeGroundActivity extends AppCompatActivity implements PhotoCropVi
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_fore_ground);
+        instance = this;//用来在主界面中关闭本活动
+        PublicWay.activityList.add(this); // 把这个界面添加到activityList集合里面
 
         //配置进度等待框
         progressDialog=new ProgressDialog(ForeGroundActivity.this);
@@ -200,6 +203,7 @@ public class ForeGroundActivity extends AppCompatActivity implements PhotoCropVi
                         relativeHeight=Calculate.RelativeHeight(baseBitmap,mode,sY,eY,viewWidth,viewHeight);
                     }
                     else{
+                        progressDialog.show();
                         relativeX=(int)(sX*780/viewWidth);
                         relativeY=(int)(sY*780/viewWidth);
                         relativeWidth=(int)((eX-sX)*780/viewWidth);
@@ -342,7 +346,7 @@ public class ForeGroundActivity extends AppCompatActivity implements PhotoCropVi
                                 Intent intent=new Intent(ForeGroundActivity.this,ForeCropActivity.class);
                                 intent.putExtra("bmpPath",bmpPath);
                                 startActivity(intent);
-                                finish();
+                                //finish();
                             }
                         }).start();
                         break;
@@ -474,7 +478,7 @@ public class ForeGroundActivity extends AppCompatActivity implements PhotoCropVi
     }
 
     //处理网络数据
-    private void parseJSONWithGSONPhoto(String jsonData){
+    public void parseJSONWithGSONPhoto(String jsonData){
         Gson gson=new Gson();
         try {
             Photo photo=gson.fromJson(jsonData,Photo.class);
@@ -493,7 +497,7 @@ public class ForeGroundActivity extends AppCompatActivity implements PhotoCropVi
         }
     }
 
-    private void upDatePhoto(){
+    public void upDatePhoto(){
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -591,7 +595,8 @@ public class ForeGroundActivity extends AppCompatActivity implements PhotoCropVi
     public boolean onOptionsItemSelected(MenuItem item){
         switch (item.getItemId()){
             case android.R.id.home://返回上一级
-                finish();
+                Intent intent=new Intent(ForeGroundActivity.this,MainActivity.class);
+                startActivity(intent);
                 break;
             default:
         }

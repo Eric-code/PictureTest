@@ -26,6 +26,7 @@ public class LastActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_last);
+        PublicWay.activityList.add(this); // 把这个界面添加到activityList集合里面
 
         Toolbar toolbar=(Toolbar)findViewById(R.id.last_toolbar);
         setSupportActionBar(toolbar);

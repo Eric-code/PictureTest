@@ -61,7 +61,7 @@
                 android:textSize="40sp"
                 android:layout_width="0dp"
                 android:layout_weight="1"
-                android:layout_height="wrap_content"
+                android:layout_height="60dp"
                 android:gravity="center" />
             <Button
                 android:id="@+id/minus_item"
@@ -69,8 +69,16 @@
                 android:textSize="40sp"
                 android:layout_width="0dp"
                 android:layout_weight="1"
-                android:layout_height="wrap_content"
+                android:layout_height="60dp"
                 android:gravity="center"/>
+            <Button
+                android:id="@+id/quit"
+                android:text="退出系统"
+                android:textSize="20sp"
+                android:layout_weight="1.5"
+                android:layout_width="0dp"
+                android:layout_height="60dp"
+                android:layout_gravity="center"/>
         </LinearLayout>
 
     </android.support.design.widget.NavigationView>

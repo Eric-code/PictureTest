@@ -59,6 +59,7 @@ public class ForeCropActivity extends AppCompatActivity implements PhotoCropView
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_fore_crop);
+        PublicWay.activityList.add(this); // 把这个界面添加到activityList集合里面
 
         //配置进度等待框
         progressDialog = new ProgressDialog(ForeCropActivity.this);
@@ -186,8 +187,8 @@ public class ForeCropActivity extends AppCompatActivity implements PhotoCropView
         }catch (Exception e){
             e.printStackTrace();
         }
-        /*Intent intentMain=new Intent(ForeCropActivity.this,MainActivity.class);
-        startActivity(intentMain);*/
+        Intent intentMain=new Intent(ForeCropActivity.this,MainActivity.class);
+        startActivity(intentMain);
         finish();//结束本活动，就直接显示主界面
     }
 

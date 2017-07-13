@@ -76,10 +76,7 @@ public class BackGroundActivity extends AppCompatActivity implements PhotoCropVi
     private String[] mStrs = {"aaa", "bbb", "ccc", "airsaid"};
     public static String[] result;
     private String[] result1;
-    private Bitmap[] showBmp;
-    private URL[] originPhoto,smallPhoto;
     public static Handler handler;
-    //private ListView mListView;
     ArrayAdapter<String>adapter;
     private boolean picListEmpty=true;
     public ProgressDialog progressDialog;
@@ -88,7 +85,7 @@ public class BackGroundActivity extends AppCompatActivity implements PhotoCropVi
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_back_ground);
-        //picture=(ImageView)findViewById(R.id.picture);
+        PublicWay.activityList.add(this); // 把这个界面添加到activityList集合里面
 
         Toolbar toolbar=(Toolbar)findViewById(R.id.back_toolbar);
         setSupportActionBar(toolbar);
@@ -202,7 +199,8 @@ public class BackGroundActivity extends AppCompatActivity implements PhotoCropVi
                                 handler.sendMessage(message);
                             }
                         }).start();
-                        finish();
+                        Intent intent=new Intent(BackGroundActivity.this,MainActivity.class);
+                        startActivity(intent);
                     default:
                         break;
                 }
@@ -213,23 +211,23 @@ public class BackGroundActivity extends AppCompatActivity implements PhotoCropVi
         menu = popupMenu.getMenu();
         // 通过XML文件添加菜单项
         MenuInflater menuInflater = getMenuInflater();
-        menuInflater.inflate(R.menu.popupmenu, menu);
+        menuInflater.inflate(R.menu.popmenuminus, menu);
         // 监听事件
         popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
 
             @Override
             public boolean onMenuItemClick(MenuItem item) {
                 switch (item.getItemId()) {
-                    case R.id.choose_from_album:
+                    case R.id.choose_from_album1:
                         if (ContextCompat.checkSelfPermission(BackGroundActivity.this, android.Manifest.permission.WRITE_EXTERNAL_STORAGE)!= PackageManager.PERMISSION_GRANTED){
                             ActivityCompat.requestPermissions(BackGroundActivity.this,new String[]{android.Manifest.permission.WRITE_EXTERNAL_STORAGE},1);
                         }else {
                             openAlbum();
                         }
                         break;
-                    case R.id.takephotos:
-                        //创建File对象，用于存储拍照后的图片,命名为outputimage.jpg,存放在SD卡应用关联缓存目录下
-                        File outputImage = new File(getExternalCacheDir(),"output_image.jpg");
+                    case R.id.takephotos1:
+                        //创建File对象，用于存储拍照后的图片,命名为outputimage1.jpg,存放在SD卡应用关联缓存目录下
+                        File outputImage = new File(getExternalCacheDir(),"output_image1.jpg");
                         try {
                             if (outputImage.exists()){
                                 outputImage.delete();
@@ -308,7 +306,8 @@ public class BackGroundActivity extends AppCompatActivity implements PhotoCropVi
     public boolean onOptionsItemSelected(MenuItem item){
         switch (item.getItemId()){
             case android.R.id.home://返回上一级
-                finish();
+                Intent intent=new Intent(BackGroundActivity.this,MainActivity.class);
+                startActivity(intent);
                 break;
             default:
         }

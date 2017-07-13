@@ -99,6 +99,7 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         final ViewGroup r = (ViewGroup)findViewById (R.id.viewGroup);
+        PublicWay.activityList.add(this); // 把这个界面添加到activityList集合里面
 
         back_picture=(ImageView)findViewById(R.id.back_picture);
         back_picture.setDrawingCacheEnabled(true);//启动缓存
@@ -115,8 +116,13 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
             actionBar.setHomeAsUpIndicator(R.drawable.ic_menu);
         }
 
-        /*Resources res=getResources();
-        backBitmap=BitmapFactory.decodeResource(res,R.drawable.init);*/
+        progressDialog=new ProgressDialog(MainActivity.this);
+        progressDialog.setTitle("任务正在执行中");
+        progressDialog.setMessage("任务正在执行中，请等待……");
+        progressDialog.setCancelable(true);
+        progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+        progressDialog.setIndeterminate(false);//不显示进度条
+
 
         navigationView=(NavigationView)findViewById(R.id.nav_view);//获取滑动菜单实例
         navigationView.setItemIconTintList(null);//设置每个图标为原来的颜色
@@ -170,6 +176,7 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
         });
         Button add_btn=(Button)findViewById(R.id.add_item);
         Button minus_btn=(Button)findViewById(R.id.minus_item);
+        Button quit_btn=(Button)findViewById(R.id.quit);
         add_btn.setOnClickListener(new View.OnClickListener() {//添加前景图片菜单项
             @Override
             public void onClick(View v) {
@@ -191,6 +198,18 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
                     fore_picture_item_num--;
                    // Toast.makeText(MainActivity.this,"删除前景+"+fore_picture_num,Toast.LENGTH_SHORT).show();
                 }
+            }
+        });
+        quit_btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                for (int i = 0; i < PublicWay.activityList.size(); i++) {
+                    if (null != PublicWay.activityList.get(i)) {
+                        // 关闭存放在activityList集合里面的所有activity
+                        PublicWay.activityList.get(i).finish();
+                    }
+                }
+                System.exit(0);
             }
         });
 
@@ -232,9 +251,7 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
                         break;
                     case CROP_PHOTO_MSG://接收到前景界面裁剪之后的图片
                         String str=null;
-                        str=ForeCropActivity.imageId;
-                        imagePath=ForeCropActivity.bmpPath;
-                        /*if (forePhotoFrom){
+                        if (forePhotoFrom){
                             str=ForeGroundActivity.imageId;//记录图片id,只选取其中的数字标识符
                             imagePath=ForeGroundActivity.bmpPath;
                             Log.e(TAG,"来自前景界面"+imagePath);
@@ -242,13 +259,13 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
                             str=ForeCropActivity.imageId;
                             imagePath=ForeCropActivity.bmpPath;
                             Log.e(TAG,"来自前景剪裁界面"+imagePath);
-                        }*/
+                        }
                         Bitmap bitmap2 =BitmapFactory.decodeFile(imagePath) ;
                         ImageView mImageView = new ImageView(MainActivity.this);
-                        imageViews[fore_picture_num]=mImageView;
                         //设置图片长度高度
                         mImageView.setLayoutParams(new DrawerLayout.LayoutParams(DrawerLayout.LayoutParams.WRAP_CONTENT, DrawerLayout.LayoutParams.WRAP_CONTENT));
                         mImageView.setImageBitmap(bitmap2);
+                        imageViews[fore_picture_num]=mImageView;
                         mImageView.setWillNotDraw(false);
                         mImageView.setId(fore_picture_num);
                         mImageView.setOnTouchListener(MainActivity.this);
@@ -272,9 +289,6 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
                             }
                             fore_picture_num++;
                         }
-                       /* imagePath=ForeGroundActivity.bmpPath;
-                        Bitmap bitmap2=BitmapFactory.decodeFile(imagePath);*/
-                        //fore_picture.setImageBitmap(bitmap2);
 
                         Log.e(TAG,"消息收");
                         break;
@@ -306,16 +320,19 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
                     dialog.dismiss();
+                    ForeGroundActivity.instance.finish();
                     back_picture.setWillNotDraw(true);
+                    base64BackString="123456";
                     //清除imageView中的图片
                     if (fore_picture_num>0){
                         for (int i=0;i<fore_picture_num;i++){
                             imageViews[i].setWillNotDraw(true);
+                            imageViews[i]=null;
                         }
                     }
+                    fore_picture_num=0;
                     //删除前景图片的菜单选项
                     if (fore_picture_item_num>0){
-
                         for (int i=fore_picture_item_num;i>0;i--){
                             navigationView.getMenu().removeItem(R.id.foregroundpicture+fore_picture_item_num);
                             fore_picture_item_num--;
@@ -332,48 +349,45 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
                 builder.create().show();
                 break;
             case R.id.mix:
-                //saveBitmap(back_picture,"mixpic");
-                /*progressDialog=new ProgressDialog(MainActivity.this);
-                progressDialog.setTitle("任务正在执行中");
-                progressDialog.setMessage("任务正在执行中，请等待……");
-                progressDialog.setCancelable(true);
-                progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-                progressDialog.setIndeterminate(false);//不显示进度条
-                progressDialog.show();*/
+                Boolean mixable=true;
                 for (int i=0;i<fore_picture_num;i++){
                     int x=Integer.parseInt(imageDatasX[i]);
                     int y=Integer.parseInt(imageDatasY[i]);
                     int width=Integer.parseInt(imageDatasWidth[i]);
                     int height=Integer.parseInt(imageDatasHeight[i]);
                     if ((x<0)||(y<0)||((x+width)>backBitmap.getWidth())||(y+height)>backBitmap.getHeight()){
-                        new  AlertDialog.Builder(MainActivity.this).setTitle("错误！").setMessage("前景图位置超出制定范围!").setPositiveButton("确定",null).show();
+                        new  AlertDialog.Builder(MainActivity.this).setTitle("错误！").setMessage("前景图位置超出指定范围!").setPositiveButton("确定",null).show();
+                        mixable=false;
                     }
                 }
-                getToString(fore_picture_num);
-                String imageData=getToLastString(imageDatas,fore_picture_num);
-                Log.e(TAG, "融合:"+imageData);
-                if (base64BackString=="123456"){//背景图片为空
-                    new  AlertDialog.Builder(MainActivity.this).setTitle("错误！").setMessage("背景图片不能为空!").setPositiveButton("确定",null).show();
-                }else {
-                    RequestBody requestBody=new FormBody.Builder()
-                            .add("value",base64BackString)
-                            .add("imageData",imageData)//提交的请求
-                            .build();
-                    HttpUtil.sendOkHttpRequest("http://10.108.125.20:8900/flaskr2/mixAndroid",requestBody,new Callback(){
-                        //得到服务器返回的具体内容
-                        @Override
-                        public void onResponse(Call call, Response response) throws IOException {
-                            String responseData=response.body().string();
-                            parseJSONWithGSONCrop(responseData);
-                        }
-                        //对异常情况进行处理
-                        @Override
-                        public void onFailure(Call call, IOException e) {
-                            //Toast.makeText(BackGroundActivity.this, "图片加载失败", Toast.LENGTH_SHORT).show();
-                        }
-                    });
+                if (mixable){
+                    progressDialog.show();
+                    getToString(fore_picture_num);
+                    String imageData=getToLastString(imageDatas,fore_picture_num);
+                    Log.e(TAG, "融合:"+imageData);
+                    if (base64BackString=="123456"){//背景图片为空
+                        new  AlertDialog.Builder(MainActivity.this).setTitle("错误！").setMessage("背景图片不能为空!").setPositiveButton("确定",null).show();
+                    }else {
+                        RequestBody requestBody=new FormBody.Builder()
+                                .add("value",base64BackString)
+                                .add("imageData",imageData)//提交的请求
+                                .build();
+                        HttpUtil.sendOkHttpRequest("http://10.108.125.20:8900/flaskr2/mixAndroid",requestBody,new Callback(){
+                            //得到服务器返回的具体内容
+                            @Override
+                            public void onResponse(Call call, Response response) throws IOException {
+                                String responseData=response.body().string();
+                                parseJSONWithGSONCrop(responseData);
+                            }
+                            //对异常情况进行处理
+                            @Override
+                            public void onFailure(Call call, IOException e) {
+                                //Toast.makeText(BackGroundActivity.this, "图片加载失败", Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                    }
+                    Log.e(TAG, "融合背景图片:"+base64BackString);
                 }
-                Log.e(TAG, "融合背景图片:"+base64BackString);
                 break;
             default:
                 break;
@@ -391,37 +405,6 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
         int viewRight=v.getRight();
         int viewTop=v.getTop();
         int viewBottom=v.getBottom();
-        /*if( (event.getAction()&MotionEvent.ACTION_MASK) == MotionEvent.ACTION_POINTER_DOWN && 2 == nCnt)
-        {
-            for(int i=0; i< nCnt; i++)
-            {
-                float x = event.getX(i);
-                float y = event.getY(i);
-                Point pt = new Point((int)x, (int)y);
-            }
-            int xlen = Math.abs((int)event.getX(0) - (int)event.getX(1));
-            int ylen = Math.abs((int)event.getY(0) - (int)event.getY(1));
-            nLenStart = Math.sqrt((double)xlen*xlen + (double)ylen * ylen);
-        }else if( (event.getAction()&MotionEvent.ACTION_MASK) == MotionEvent.ACTION_POINTER_UP  && 2 == nCnt)
-        {
-            for(int i=0; i< nCnt; i++)
-            {
-                float x = event.getX(i);
-                float y = event.getY(i);
-                Point pt = new Point((int)x, (int)y);
-            }
-            int xlen = Math.abs((int)event.getX(0) - (int)event.getX(1));
-            int ylen = Math.abs((int)event.getY(0) - (int)event.getY(1));
-            double nLenEnd = Math.sqrt((double)xlen*xlen + (double)ylen * ylen);
-            if(nLenEnd > nLenStart)//通过两个手指开始距离和结束距离，来判断放大缩小
-            {
-                v.layout(viewLeft-5,viewTop-5,viewRight+5,viewBottom+5);
-            }
-            else
-            {
-                v.layout(viewLeft+5,viewTop+5,viewRight-5,viewBottom-5);
-            }
-        }*/
         if (nCnt==2){
             switch (event.getAction()) {
                 case MotionEvent.ACTION_DOWN:
